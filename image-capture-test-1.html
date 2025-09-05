@@ -26,7 +26,16 @@
       background: rgba(0,0,0,0.6);
       color: white;
       border-radius: 10px;
-      font-size: 18px;
+      font-size: 28px;
+    }
+
+     /* 🔄 Forzar landscape en móviles */
+    @media screen and (orientation:portrait) {
+      #container {
+        transform: rotate(90deg);
+        width: 100vh;
+        height: 100vw;
+      }
     }
   </style>
 </head>
@@ -111,7 +120,15 @@
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const predictions = await model.detect(canvas);
-        const car = predictions.find(p => p.class === "car");
+        const car = predictions.find(p =>
+          ["car", "truck", "bus"].includes(p.class)
+        );
+
+        console.log("Detecciones:", predictions); // 🔍 Debug en consola
+
+        if (predictions.length > 0) {
+            feedback.innerText = "Detectado: " + predictions.map(p => p.class).join(", ");
+            }
 
         if (car) {
           const [x, y, w, h] = car.bbox;
