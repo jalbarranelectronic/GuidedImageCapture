@@ -141,11 +141,6 @@
           // Crear Path2D a partir del path SVG
           marcoPath = createScaledPath(svgPathData, overlayCanvas.width, overlayCanvas.height);
 
-          overlayCtx.save();
-
-          // Llevar el path al centro del canvas
-          overlayCtx.translate(overlayCanvas.width / 2, overlayCanvas.height / 2);
-
           // Dibujar marco
           overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
           overlayCtx.strokeStyle = "lime";
