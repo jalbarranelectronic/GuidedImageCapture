@@ -132,7 +132,7 @@
       const transformed = new Path2D();
       transformed.addPath(rawPath, new DOMMatrix()
         .translate(offsetX, offsetY)
-        .scale(scale, scale)
+        .scale(scaleX, scaleY)
       );
       return transformed;
     }
@@ -147,7 +147,7 @@
       const transformed = new Path2D();
       transformed.addPath(rawPath, new DOMMatrix()
         .translate(offsetX, offsetY)
-        .scale(scale, scale)
+        .scale(scaleX, scaleY)
       );
       return transformed;
     }
