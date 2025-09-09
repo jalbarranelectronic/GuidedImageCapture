@@ -152,7 +152,8 @@
 
     window.onload = async () => {
       try {
-        
+        feeback.innerText = "Solicitando permiso para acceder a cámara";
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
         feedback.innerText = "Cámara lista. Pulsa Iniciar.";
       } catch (err) {
         feedback.innerText = "❌ No se pudo acceder a la cámara";
@@ -176,7 +177,7 @@
     }
 
     async function initCamera() {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
+      
       video.srcObject = stream;
 
       return new Promise((resolve) => {
