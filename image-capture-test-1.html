@@ -285,7 +285,7 @@
 
         if (car) {
           const [x, y, w, h] = car.bbox;
-          const dentro = rectDentroDePath(x, y, w, h, marcoPath, overlayCtx);
+          const dentro = rectDentroDePath(x, y, w, h, rectPath, overlayCtx);
 
           const carArea = w * h;
           const marcoBox = overlayCanvas.width * 0.6 * overlayCanvas.height * 0.3;
@@ -294,9 +294,7 @@
           proportionBox.firstChild.textContent = `Proporción: ${proportion.toFixed(2)}`;
           updateChart(proportion);
 
-          if (!dentro) {
-            feedback.innerText = `Detectado ${car.class}, ajusta el encuadre 🔄`;
-          } else if (proportion > 1.2) {
+          if (!dentro || proportion > 1.2) {
             feedback.innerText = "Muy cerca 🚗⬅️";
           } else if (proportion < 0.7) {
             feedback.innerText = "Muy lejos 🚗➡️";
