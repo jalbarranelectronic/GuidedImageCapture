@@ -152,7 +152,7 @@
 
     window.onload = async () => {
       try {
-        feeback.innerText = "Solicitando permiso para acceder a cámara";
+        feedback.innerText = "Solicitando permiso para acceder a cámara";
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
         feedback.innerText = "Cámara lista. Pulsa Iniciar.";
       } catch (err) {
