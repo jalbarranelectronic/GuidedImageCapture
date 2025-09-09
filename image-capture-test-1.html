@@ -106,7 +106,7 @@
 
     let marcoPath;
     let rectPath;
-    let rectScale = 1;
+    let rectScaleX = 1, rectScaleY = 1;
     let stream;
     let proportionHistory = [];
 
@@ -124,25 +124,18 @@
 
     function createScaledPath(d, canvasWidth, canvasHeight) {
       const rawPath = new Path2D(d);
-      const scaleX = canvasWidth / svgWidth;
-      const scaleY = canvasHeight / svgHeight;
-      const offsetX = (canvasWidth - svgWidth * scaleX) / 2;
-      const offsetY = (canvasHeight - svgHeight * scaleY) / 2;
 
-      const transformed = new Path2D();
-      transformed.addPath(rawPath, new DOMMatrix()
-        .translate(offsetX, offsetY)
-        .scale(scaleX, scaleY)
-      );
-      return transformed;
-    }
+      const marginX = canvasWidth * 0.05;
+      const marginY = canvasHeight * 0.05;
 
-    function createScaledRectPath(d, canvasWidth, canvasHeight) {
-      const rawPath = new Path2D(d);
-      const scaleX = canvasWidth / rectWidth
-      const scaleY = canvasHeight / rectHeight;
-      const offsetX = (canvasWidth - rectWidth * scaleX) / 2;
-      const offsetY = (canvasHeight - rectHeight * scaleY) / 2;
+      const availableWidth = canvasWidth - 2 * marginX;
+      const availableHeight = canvasHeight - 2 * marginY;
+
+      const scaleX = availableWidth / svgWidth;
+      const scaleY = availableHeight / svgHeight;
+
+      const offsetX = marginX;
+      const offsetY = marginY;
 
       const transformed = new Path2D();
       transformed.addPath(rawPath, new DOMMatrix()
@@ -206,7 +199,9 @@
       overlayCtx.stroke(marcoPath);
 
       // --- Rectángulo de referencia ---
-      rectPath = createScaledRectPath(rectPathData, overlayCanvas.width, overlayCanvas.height);
+      rectPath = createScaledPath(rectPathData, overlayCanvas.width, overlayCanvas.height);
+      rectScaleX = rectPath.scaleX;
+      rectScaleY = rectPath.scaleY;
 
       overlayCtx.strokeStyle = "yellow";
       overlayCtx.lineWidth = 3;
@@ -290,8 +285,10 @@
           const dentro = rectDentroDePath(x, y, w, h, rectPath, overlayCtx);
 
           const carArea = w * h;
-          const marcoBox = overlayCanvas.width * 0.6 * overlayCanvas.height * 0.3;
-          const proportion = carArea / marcoBox;
+          //const marcoBox = overlayCanvas.width * 0.6 * overlayCanvas.height * 0.3;
+          const rectArea = (rectWidth * rectScaleX) * (rectHeight * rectScaleY);
+          //const proportion = carArea / marcoBox;
+          const proportion = carArea / rectArea;
 
           proportionBox.firstChild.textContent = `Proporción: ${proportion.toFixed(2)}`;
           updateChart(proportion);
