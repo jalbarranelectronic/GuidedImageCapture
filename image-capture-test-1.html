@@ -105,6 +105,8 @@
     const startBtn = document.getElementById('startBtn');
 
     let marcoPath;
+    let rectPath;
+    let rectScale = 1;
     let stream;
     let proportionHistory = [];
 
@@ -112,6 +114,13 @@
     const svgWidth = 597;  // ancho original del SVG
     const svgHeight = 289;  // alto original del SVG
 
+    const rectPathData = `M 0.73,0.73
+  C 0.73,0.73 595.16,1.10 595.16,1.10
+    595.16,1.10 594.79,286.96 594.79,286.96
+    594.79,286.96 2.20,286.60 2.20,286.60
+    2.20,286.60 0.73,0.73 0.73,0.73 Z`;
+    const rectWidth = 597;   // ancho del SVG rect
+    const rectHeight = 289;  // alto del SVG rect
 
     function createScaledPath(d, canvasWidth, canvasHeight) {
       const rawPath = new Path2D(d);
@@ -127,9 +136,23 @@
       return transformed;
     }
 
+    function createScaledRectPath(d, canvasWidth, canvasHeight) {
+      const rawPath = new Path2D(d);
+      const scale = Math.min(canvasWidth / rectWidth, canvasHeight / rectHeight);
+      const offsetX = (canvasWidth - rectWidth * scale) / 2;
+      const offsetY = (canvasHeight - rectHeight * scale) / 2;
+
+      const transformed = new Path2D();
+      transformed.addPath(rawPath, new DOMMatrix()
+        .translate(offsetX, offsetY)
+        .scale(scale, scale)
+      );
+      return transformed;
+    }
+
     window.onload = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
+        
         feedback.innerText = "Cámara lista. Pulsa Iniciar.";
       } catch (err) {
         feedback.innerText = "❌ No se pudo acceder a la cámara";
@@ -152,8 +175,10 @@
       }
     }
 
-    async function initCanvas() {
+    async function initCamera() {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
       video.srcObject = stream;
+
       return new Promise((resolve) => {
         video.onloadedmetadata = () => {
           canvas.width = video.videoWidth;
@@ -161,17 +186,29 @@
           overlayCanvas.width = video.videoWidth;
           overlayCanvas.height = video.videoHeight;
 
-          marcoPath = createScaledPath(svgPathData, overlayCanvas.width, overlayCanvas.height);
-
-          overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-          overlayCtx.strokeStyle = "lime";
-          overlayCtx.lineWidth = 4;
-          overlayCtx.setLineDash([10, 6]);
-          overlayCtx.stroke(marcoPath);
-
+          initCanvas();
           resolve();
         };
       });
+    }
+
+    async function initCanvas() {
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+      // --- Marco irregular ---
+      marcoPath = createScaledPath(svgPathData, overlayCanvas.width, overlayCanvas.height);
+      overlayCtx.strokeStyle = "lime";
+      overlayCtx.lineWidth = 4;
+      overlayCtx.setLineDash([10, 6]);
+      overlayCtx.stroke(marcoPath);
+
+      // --- Rectángulo de referencia ---
+      rectPath = createScaledRectPath(rectPathData, overlayCanvas.width, overlayCanvas.height);
+
+      overlayCtx.strokeStyle = "yellow";
+      overlayCtx.lineWidth = 3;
+      overlayCtx.setLineDash([]);
+      overlayCtx.stroke(rectPath);
     }
 
     function rectDentroDePath(x, y, w, h, path, ctx) {
@@ -217,6 +254,7 @@
     }
 
     async function runDetection() {
+      feedback.innerText = "Cargando modelo de detección de objetos...";
       const model = await cocoSsd.load();
       feedback.innerText = "Modelo cargado. Busca el auto...";
 
@@ -229,10 +267,7 @@
           : "Sin detecciones";
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-        overlayCtx.strokeStyle = "lime";
-        overlayCtx.lineWidth = 4;
-        overlayCtx.setLineDash([10, 6]);
-        overlayCtx.stroke(marcoPath);
+        initCanvas(); // redibuja marcos
 
         predictions.forEach(p => {
           const [x, y, w, h] = p.bbox;
@@ -277,8 +312,7 @@
     startBtn.addEventListener("click", async () => {
       startBtn.style.display = "none";
       await requestFullscreenAndOrientation();
-      await initCanvas();
-      runDetection();
+      await initCamera().then(runDetection());
     });
   </script>
 </body>
