@@ -126,8 +126,8 @@
       const rawPath = new Path2D(d);
       const scaleX = canvasWidth / svgWidth;
       const scaleY = canvasHeight / svgHeight;
-      const offsetX = (canvasWidth - svgWidth * scale) / 2;
-      const offsetY = (canvasHeight - svgHeight * scale) / 2;
+      const offsetX = (canvasWidth - svgWidth * scaleX) / 2;
+      const offsetY = (canvasHeight - svgHeight * scaleY) / 2;
 
       const transformed = new Path2D();
       transformed.addPath(rawPath, new DOMMatrix()
