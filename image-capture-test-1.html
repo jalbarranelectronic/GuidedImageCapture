@@ -124,7 +124,8 @@
 
     function createScaledPath(d, canvasWidth, canvasHeight) {
       const rawPath = new Path2D(d);
-      const scale = Math.min(canvasWidth / svgWidth, canvasHeight / svgHeight);
+      const scaleX = canvasWidth / svgWidth;
+      const scaleY = canvasHeight / svgHeight;
       const offsetX = (canvasWidth - svgWidth * scale) / 2;
       const offsetY = (canvasHeight - svgHeight * scale) / 2;
 
@@ -138,9 +139,10 @@
 
     function createScaledRectPath(d, canvasWidth, canvasHeight) {
       const rawPath = new Path2D(d);
-      const scale = Math.min(canvasWidth / rectWidth, canvasHeight / rectHeight);
-      const offsetX = (canvasWidth - rectWidth * scale) / 2;
-      const offsetY = (canvasHeight - rectHeight * scale) / 2;
+      const scaleX = canvasWidth / rectWidth
+      const scaleY = canvasHeight / rectHeight;
+      const offsetX = (canvasWidth - rectWidth * scaleX) / 2;
+      const offsetY = (canvasHeight - rectHeight * scaleY) / 2;
 
       const transformed = new Path2D();
       transformed.addPath(rawPath, new DOMMatrix()
@@ -268,7 +270,7 @@
           : "Sin detecciones";
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-        //initCanvas(); // redibuja marcos
+        initCanvas(); // redibuja marcos
 
         predictions.forEach(p => {
           const [x, y, w, h] = p.bbox;
