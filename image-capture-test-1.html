@@ -87,7 +87,7 @@
   <div id="feedback">Loading ODM...</div>
   <div id="detections">No detections yet...</div>
   <div id="proportionBox">
-    Propoortion: N/A
+    Proportion: N/A
     <canvas id="proportionChart" width="200" height="80"></canvas>
   </div>
 
@@ -228,9 +228,9 @@
 
       const mapValueToY = (v) => proportionChart.height * (1 - (v -rangeMin) / (rangeMax - rangeMin));
 
-      // Dibujar líneas de referencia (0.4 y 0.5)
+      // Dibujar líneas de referencia (0.35 y 0.5)
       const thresholds = [
-        { value: 0.4, color: "orange" },
+        { value: 0.35, color: "orange" },
         { value: 0.5, color: "red" }
       ];
 
@@ -304,7 +304,7 @@
 
           if (!dentro || proportion > 0.5) {
             feedback.innerText = "Adjust the framing or step back a little. 🚗⬅️";
-          } else if (proportion < 0.38) {
+          } else if (proportion < 0.35) {
             feedback.innerText = "You're too far 🚗➡️";
           } else {
             feedback.innerText = "Perfect! 📸";
