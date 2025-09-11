@@ -262,7 +262,7 @@
 
     async function runDetection() {
       feedback.innerText = "Loading ODM...";
-      const model = await cocoSsd.load();
+      const model = await cocoSsd.load({base: 'mobilenet_v2'});
       feedback.innerText = "ODM completely loaded. Searching car...";
 
       setInterval(async () => {
