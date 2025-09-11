@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Detector con Marco Irregular (SVG)</title>
+  <title>Guided image capture</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
     body, html {
@@ -80,14 +80,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
 <body>
-  <button id="startBtn">Iniciar aplicación</button>
+  <button id="startBtn">Start capture</button>
   <video id="video" autoplay playsinline></video>
   <canvas id="canvas" style="display:none;"></canvas>
   <canvas id="overlayCanvas"></canvas>
-  <div id="feedback">Cargando modelo...</div>
-  <div id="detections">Sin detecciones aún...</div>
+  <div id="feedback">Loading ODM...</div>
+  <div id="detections">No detections yet...</div>
   <div id="proportionBox">
-    Proporción: N/A
+    Propoortion: N/A
     <canvas id="proportionChart" width="200" height="80"></canvas>
   </div>
 
@@ -148,11 +148,11 @@
 
     window.onload = async () => {
       try {
-        feedback.innerText = "Solicitando permiso para acceder a cámara";
+        feedback.innerText = "Requesting camera access...";
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }});
-        feedback.innerText = "Cámara lista. Pulsa Iniciar.";
+        feedback.innerText = "Camera ready. Press start.";
       } catch (err) {
-        feedback.innerText = "❌ No se pudo acceder a la cámara";
+        feedback.innerText = "❌ Couldn't access the camera.";
         console.error(err);
       }
     };
@@ -168,7 +168,7 @@
           await screen.orientation.lock("landscape");
         }
       } catch (err) {
-        console.warn("⚠️ No se pudo activar fullscreen/orientación:", err);
+        console.warn("⚠️ Can't activate fullscreen:", err);
       }
     }
 
@@ -261,9 +261,9 @@
     }
 
     async function runDetection() {
-      feedback.innerText = "Cargando modelo de detección de objetos...";
+      feedback.innerText = "Loading ODM...";
       const model = await cocoSsd.load();
-      feedback.innerText = "Modelo cargado. Busca el auto...";
+      feedback.innerText = "ODM completely loaded. Searching car...";
 
       setInterval(async () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -271,7 +271,7 @@
 
         detectionsBox.innerText = predictions.length > 0
           ? predictions.map(p => `${p.class} (${(p.score*100).toFixed(1)}%)`).join("\n")
-          : "Sin detecciones";
+          : "No detections";
 
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         initCanvas(); // redibuja marcos
@@ -299,19 +299,19 @@
           //const proportion = carArea / marcoBox;
           const proportion = carArea / rectArea;
 
-          proportionBox.firstChild.textContent = `Proporción: ${proportion.toFixed(2)}`;
+          proportionBox.firstChild.textContent = `Proportion: ${proportion.toFixed(2)}`;
           updateChart(proportion);
 
           if (!dentro || proportion > 0.5) {
-            feedback.innerText = "Ajusta el encuadre o alejate un poco 🚗⬅️";
+            feedback.innerText = "Adjust the framing or step back a little. 🚗⬅️";
           } else if (proportion < 0.4) {
-            feedback.innerText = "Muy lejos 🚗➡️";
+            feedback.innerText = "You're too far 🚗➡️";
           } else {
-            feedback.innerText = "¡Perfecto! 📸";
+            feedback.innerText = "Perfect! 📸";
           }
         } else {
-          feedback.innerText = "No detecto el auto, ajusta la cámara.";
-          proportionBox.firstChild.textContent = "Proporción: N/A";
+          feedback.innerText = "I cannot detect the car, adjust the framing.";
+          proportionBox.firstChild.textContent = "Proportion: N/A";
         }
       }, 1000);
     }
