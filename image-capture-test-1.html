@@ -142,7 +142,8 @@
         .translate(offsetX, offsetY)
         .scale(scaleX, scaleY)
       );
-      return transformed;
+
+      return { path: transformed, scaleX, scaleY };
     }
 
     window.onload = async () => {
@@ -192,16 +193,18 @@
       overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
       // --- Marco irregular ---
-      marcoPath = createScaledPath(svgPathData, overlayCanvas.width, overlayCanvas.height);
+      const marcoScaledPath = createScaledPath(svgPathData, overlayCanvas.width, overlayCanvas.height);
+      marcoPath = marcoScaledPath.path;
       overlayCtx.strokeStyle = "lime";
       overlayCtx.lineWidth = 4;
       overlayCtx.setLineDash([10, 6]);
       overlayCtx.stroke(marcoPath);
 
       // --- Rectángulo de referencia ---
-      rectPath = createScaledPath(rectPathData, overlayCanvas.width, overlayCanvas.height);
-      rectScaleX = rectPath.scaleX;
-      rectScaleY = rectPath.scaleY;
+      const rectScaledPath = createScaledPath(rectPathData, overlayCanvas.width, overlayCanvas.height);
+      rectPath = rectScaledPath.path;
+      rectScaleX = rectScaledPath.scaleX;
+      rectScaleY = rectScaledPath.scaleY;
 
       overlayCtx.strokeStyle = "yellow";
       overlayCtx.lineWidth = 3;
