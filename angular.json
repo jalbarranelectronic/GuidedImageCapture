@@ -23,7 +23,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+			"outputPath" : "dist/guided-image-capture"
           },
           "configurations": {
             "production": {
@@ -31,7 +32,7 @@
                 {
                   "type": "initial",
                   "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -78,6 +79,9 @@
               "src/styles.css"
             ]
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy"
         }
       }
     }

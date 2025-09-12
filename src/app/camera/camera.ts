@@ -109,11 +109,10 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // request fullscreen & lock landscape (best-effort)
   private async requestFullscreenAndOrientation() {
     try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      } else if ((document.documentElement as any).webkitRequestFullscreen) {
-        await (document.documentElement as any).webkitRequestFullscreen();
-      }
+      await((document.documentElement as any).requestFullScreen?.() ||
+        (document.documentElement as any).webkitRequestFullscreen?.() ||
+        (document.documentElement as any).mozRequestFullScreen?.() ||
+        (document.documentElement as any).msRequestFullscreen?.());
     } catch (err) {
       console.warn("Can't force fullscreen/orientation:", err);
     }
