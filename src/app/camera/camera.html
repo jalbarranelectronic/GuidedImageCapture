@@ -1,0 +1,17 @@
+<button #startBtn id="startBtn" (click)="startCapture()">Start capture</button>
+
+<video #video id="video" autoplay playsinline></video>
+<canvas #canvas id="canvas" style="display:none;"></canvas>
+<canvas #overlayCanvas id="overlayCanvas"></canvas>
+
+<div id="feedback">{{ feedback() }}</div>
+
+<div id="detections">
+  <div *ngIf="detections().length === 0">No detections yet...</div>
+  <div *ngFor="let d of detections()">{{ d }}</div>
+</div>
+
+<div id="proportionBox">
+  Proportion: <span>{{ proportion() !== null ? proportion() : 'N/A' }}</span>
+  <app-chart [newValue]="proportion()"></app-chart>
+</div>

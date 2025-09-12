@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  margin: 8px auto;
+  text-align: center;
+}
+canvas {
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #111;
+}
