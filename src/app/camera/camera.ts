@@ -24,6 +24,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   showDetections = signal(false);
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
+  capturedImage = signal<string | null>(null);
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -473,11 +474,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
+          if (!this.capturedImage()) { // solo capturar si aún no hay foto
+            this.capturePhoto();
+          }
         }
       } else {
         this.feedback.set('I cannot detect the car, adjust the framing.');
         this.proportion.set(null);
       }
     }, 1000);
+  }
+
+  capturePhoto() {
+    const photoCanvas = document.createElement('canvas');
+    photoCanvas.width = this.videoRef.nativeElement.videoWidth;
+    photoCanvas.height = this.videoRef.nativeElement.videoHeight;
+
+    const ctx = photoCanvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(this.videoRef.nativeElement, 0, 0, photoCanvas.width, photoCanvas.height);
+      this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
+    }
+  }
+
+    usePhoto() {
+    alert("Foto confirmada ✅");
+    // Aquí podrías emitir un evento al padre o guardar la foto en backend
   }
 }

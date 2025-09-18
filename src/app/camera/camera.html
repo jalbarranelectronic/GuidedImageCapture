@@ -4,6 +4,15 @@
 <canvas #canvas id="canvas" style="display:none;"></canvas>
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
+<div *ngIf="capturedImage() as photo" class="photo-preview">
+  <img [src]="photo" alt="Captured photo" />
+
+  <div class="photo-actions">
+    <button class="retry" (click)="capturedImage.set(null)">↻ Retry</button>
+    <button class="confirm" (click)="usePhoto()">✔ Use photo</button>
+  </div>
+</div>
+
 <div id="feedback">{{ feedback() }}</div>
 
 <!-- Toggle switch -->
