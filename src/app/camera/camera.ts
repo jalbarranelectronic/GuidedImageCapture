@@ -21,6 +21,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   // Signals
   feedback = signal('Loading ODM...');
+  showDetections = signal(false);
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
 
@@ -265,6 +266,10 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     if (this.stream) {
       this.stream.getTracks().forEach(t => t.stop());
     }
+  }
+
+  toggleDetections() {
+    this.showDetections.update((v) => !v);
   }
 
   // helper: create scaled Path2D and scales with margin (centered)

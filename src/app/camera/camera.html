@@ -6,15 +6,26 @@
 
 <div id="feedback">{{ feedback() }}</div>
 
-<div id="detections">
-  <div *ngIf="detections().length === 0">No detections yet...</div>
-  <div *ngFor="let d of detections()">{{ d }}</div>
-</div>
+<!-- Toggle switch -->
+  <div class="toggle-container">
+    <label class="switch">
+      <input type="checkbox" [checked]="showDetections()" (change)="toggleDetections()" />
+      <span class="slider"></span>
+    </label>
+    <span class="toggle-label">Show detections and proportions</span>
+  </div>
 
-<div id="proportionBox">
-  Proportion: <span>{{ proportion() !== null ? proportion() : 'N/A' }}</span>
-  <app-chart [newValue]="proportion()"></app-chart>
-</div>
+  <div *ngIf="showDetections()">
+    <div id="detections">
+      <div *ngIf="detections().length === 0">No detections yet...</div>
+      <div *ngFor="let d of detections()">{{ d }}</div>
+    </div>
+
+    <div id="proportionBox">
+      Proportion: <span>{{ proportion() !== null ? proportion() : 'N/A' }}</span>
+      <app-chart [newValue]="proportion()"></app-chart>
+    </div>
+  </div>
 
 <div class="orientation-warning">
   <div class="orientation-content">
