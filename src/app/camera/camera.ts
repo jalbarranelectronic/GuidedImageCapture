@@ -168,17 +168,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
+
+    // 🔹 Dibujar overlay alrededor del marco irregular
+    this.overlayCtx.save();
+
+    // Pintar todo el fondo con color semi-transparente
+    this.overlayCtx.fillStyle = 'rgba(39, 39, 39, 0.50)'; // #272727 con 50% opacidad
+    this.overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // Cambiar modo de mezcla para "recortar" el marco
+    this.overlayCtx.globalCompositeOperation = 'destination-out';
+    this.overlayCtx.fill(this.marcoPath);
+
+    // Restaurar operación normal
+    this.overlayCtx.globalCompositeOperation = 'source-over';
+
     // yellow rect
-    this.overlayCtx.strokeStyle = 'yellow';
-    this.overlayCtx.lineWidth = 3;
-    this.overlayCtx.setLineDash([]);
+    this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
+    this.overlayCtx.lineWidth = 0;
     this.overlayCtx.stroke(this.rectPath);
     // irregular marco
-    this.overlayCtx.strokeStyle = 'lime';
-    this.overlayCtx.lineWidth = 4;
-    this.overlayCtx.setLineDash([10, 6]);
-    this.overlayCtx.stroke(this.marcoPath);
+    this.overlayCtx.strokeStyle = 'white';
+    this.overlayCtx.lineWidth = 1;
     this.overlayCtx.setLineDash([]);
+    this.overlayCtx.stroke(this.marcoPath);
+    this.overlayCtx.restore();
   }
 
   private runDetectionLoop() {
@@ -195,17 +209,32 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
       // clear overlay and redraw reference shapes
       this.overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      // draw rect and marco
-      this.overlayCtx.strokeStyle = 'yellow';
-      this.overlayCtx.lineWidth = 3;
-      this.overlayCtx.setLineDash([]);
+
+      // 🔹 Dibujar overlay alrededor del marco irregular
+      this.overlayCtx.save();
+
+      // Pintar todo el fondo con color semi-transparente
+      this.overlayCtx.fillStyle = 'rgba(39, 39, 39, 0.50)'; // #272727 con 50% opacidad
+      this.overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+      // Cambiar modo de mezcla para "recortar" el marco
+      this.overlayCtx.globalCompositeOperation = 'destination-out';
+      this.overlayCtx.fill(this.marcoPath);
+
+      // Restaurar operación normal
+      this.overlayCtx.globalCompositeOperation = 'source-over';
+
+      // draw invisible rect
+      this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
+      this.overlayCtx.lineWidth = 0;
       this.overlayCtx.stroke(this.rectPath);
 
-      this.overlayCtx.strokeStyle = 'lime';
-      this.overlayCtx.lineWidth = 4;
-      this.overlayCtx.setLineDash([10, 6]);
-      this.overlayCtx.stroke(this.marcoPath);
+      // irregular marco
+      this.overlayCtx.strokeStyle = 'white';
+      this.overlayCtx.lineWidth = 1;
       this.overlayCtx.setLineDash([]);
+      this.overlayCtx.stroke(this.marcoPath);
+      this.overlayCtx.restore();
 
       // draw detections
       predictions.forEach(p => {

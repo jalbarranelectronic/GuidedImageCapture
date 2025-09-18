@@ -4,6 +4,9 @@
   text-align: center;
 }
 canvas {
+  width: 80%;       /* 👈 ocupa solo el 80% del ancho disponible */
+  max-width: 300px; /* 👈 nunca será más grande que 400px */
+  height: auto;     /* mantiene proporción */
   border: 1px solid #555;
   border-radius: 6px;
   background: #111;
