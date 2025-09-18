@@ -276,9 +276,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   private createScaledPath(d: string, canvasWidth: number, canvasHeight: number) {
     const rawPath = new Path2D(d);
 
-    // use 5% margins like your final HTML
-    const marginX = canvasWidth * 0.05;
-    const marginY = canvasHeight * 0.05;
+    // use 8% margins like your final HTML
+    const marginX = canvasWidth * 0.08;
+    const marginY = canvasHeight * 0.08;
 
     const availableWidth = canvasWidth - 2 * marginX;
     const availableHeight = canvasHeight - 2 * marginY;
@@ -291,7 +291,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // center within the available area
     const offsetX = marginX + (availableWidth - scaledWidth) / 2;
-    const offsetY = marginY + (availableHeight - scaledHeight) / 2;
+    const offsetY = 16;
 
     const transformed = new Path2D();
     transformed.addPath(rawPath, new DOMMatrix().translate(offsetX, offsetY).scale(scaleX, scaleY));
@@ -472,7 +472,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         } else if (prop < 0.35) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
-          this.feedback.set('Perfect! 📸');
+          this.feedback.set("Perfect! Don't move, capturing... 📸");
         }
       } else {
         this.feedback.set('I cannot detect the car, adjust the framing.');
