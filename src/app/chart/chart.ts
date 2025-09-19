@@ -45,8 +45,8 @@ export class ChartComponent implements AfterViewInit {
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const thresholds = [
-      { value: Number(this.farThreshold()), color: 'orange' },
-      { value: Number(this.nearThreshold()), color: 'red' },
+      { value: this.farThreshold(), color: 'orange' },
+      { value: this.nearThreshold(), color: 'red' },
     ];
     console.log(`${thresholds[0].value}, ${thresholds[1].value}`);
     thresholds.forEach((t) => {

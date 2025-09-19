@@ -292,11 +292,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   setNearThreshold(value: number) {
-    this.nearThreshold.set(value);
+    this.nearThreshold.set(Number(value));
   }
 
   setFarThreshold(value: number) {
-    this.farThreshold.set(value);
+    this.farThreshold.set(Number(value));
   }
 
   // helper: create scaled Path2D and scales with margin (centered)
