@@ -1,15 +1,25 @@
-import { Component, ElementRef, ViewChild, input, AfterViewInit, effect } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  ViewChild,
+  input,
+  AfterViewInit,
+  effect,
+} from '@angular/core';
 
 @Component({
   selector: 'app-chart',
   standalone: true,
   templateUrl: './chart.html',
-  styleUrl: './chart.css'
+  styleUrl: './chart.css',
 })
 export class ChartComponent implements AfterViewInit {
-  @ViewChild('proportionChart', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('proportionChart', { static: true })
+  canvasRef!: ElementRef<HTMLCanvasElement>;
   // receive a signal value via input()
   newValue = input<number | null>(null);
+  nearThreshold = input<number>(0.5);
+  farThreshold = input<number>(0.4);
 
   private ctx!: CanvasRenderingContext2D;
   private history: number[] = [];
@@ -35,17 +45,25 @@ export class ChartComponent implements AfterViewInit {
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const thresholds = [
-      { value: 0.35, color: 'orange' },
-      { value: 0.55, color: 'red' }
+      { value: Number(this.farThreshold()), color: 'orange' },
+      { value: Number(this.nearThreshold()), color: 'red' },
     ];
-    thresholds.forEach(t => {
+    console.log(`${thresholds[0].value}, ${thresholds[1].value}`);
+    thresholds.forEach((t) => {
+      console.log(typeof t.value);
       const y = this.valueToY(t.value);
+      // Línea de referencia
       this.ctx.beginPath();
       this.ctx.strokeStyle = t.color;
       this.ctx.setLineDash([4, 4]);
       this.ctx.moveTo(0, y);
       this.ctx.lineTo(canvas.width, y);
       this.ctx.stroke();
+      //Etiqueta con el valor del umbral
+      this.ctx.setLineDash([]); // reset
+      this.ctx.fillStyle = t.color;
+      this.ctx.font = '12px Arial';
+      this.ctx.fillText(t.value.toFixed(2), 5, y - 5);
     });
     this.ctx.setLineDash([]);
   }

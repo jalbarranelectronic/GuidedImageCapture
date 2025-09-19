@@ -31,8 +31,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
   capturedImage = signal<string | null>(null);
+
   showDetections = signal(false);
   showBoxes = signal(false);
+
+  nearThreshold = signal(0.5); // demasiado cerca
+  farThreshold = signal(0.4); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -287,6 +291,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.showBoxes.update((v) => !v);
   }
 
+  setNearThreshold(value: number) {
+    this.nearThreshold.set(value);
+  }
+
+  setFarThreshold(value: number) {
+    this.farThreshold.set(value);
+  }
+
   // helper: create scaled Path2D and scales with margin (centered)
   private createScaledPath(
     d: string,
@@ -531,9 +543,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         this.proportion.set(+proportion.toFixed(3));
 
         const prop = proportion;
-        if (!dentro || prop > 0.5) {
+        if (!dentro || prop > this.nearThreshold()) {
           this.feedback.set('Adjust the framing or step back a little. 🚗⬅️');
-        } else if (prop < 0.35) {
+        } else if (prop < this.farThreshold()) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
