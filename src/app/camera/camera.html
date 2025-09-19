@@ -1,7 +1,7 @@
 <button #startBtn id="startBtn" (click)="startCapture()">Start capture</button>
 
 <video #video id="video" autoplay playsinline></video>
-<canvas #canvas id="canvas" style="display:none;"></canvas>
+<canvas #canvas id="canvas" style="display: none"></canvas>
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
 <div *ngIf="capturedImage() as photo" class="photo-preview">
@@ -16,25 +16,39 @@
 <div id="feedback">{{ feedback() }}</div>
 
 <!-- Toggle switch -->
-  <div class="toggle-container">
+<div class="toggle-panel">
+  <div class="toggle-item">
     <label class="switch">
-      <input type="checkbox" [checked]="showDetections()" (change)="toggleDetections()" />
+      <input
+        type="checkbox"
+        [checked]="showDetections()"
+        (change)="toggleDetections()"
+      />
       <span class="slider"></span>
     </label>
     <span class="toggle-label">Show detections and proportions</span>
   </div>
 
-  <div *ngIf="showDetections()">
-    <div id="detections">
-      <div *ngIf="detections().length === 0">No detections yet...</div>
-      <div *ngFor="let d of detections()">{{ d }}</div>
-    </div>
-
-    <div id="proportionBox">
-      Proportion: <span>{{ proportion() !== null ? proportion() : 'N/A' }}</span>
-      <app-chart [newValue]="proportion()"></app-chart>
-    </div>
+  <div class="toggle-item">
+    <label class="switch">
+      <input type="checkbox" [checked]="showBoxes()" (change)="toggleBoxes()" />
+      <span class="slider"></span>
+    </label>
+    <span class="toggle-label">Mostrar bounding boxes</span>
   </div>
+</div>
+
+<div *ngIf="showDetections()">
+  <div id="detections">
+    <div *ngIf="detections().length === 0">No detections yet...</div>
+    <div *ngFor="let d of detections()">{{ d }}</div>
+  </div>
+
+  <div id="proportionBox">
+    Proportion: <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
+    <app-chart [newValue]="proportion()"></app-chart>
+  </div>
+</div>
 
 <div class="orientation-warning">
   <div class="orientation-content">

@@ -1,4 +1,11 @@
-import { Component, AfterViewInit, OnDestroy, ElementRef, ViewChild, signal } from '@angular/core';
+import {
+  Component,
+  AfterViewInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-cpu';
@@ -11,7 +18,7 @@ import { ChartComponent } from '../chart/chart';
   standalone: true,
   imports: [CommonModule, ChartComponent],
   templateUrl: './camera.html',
-  styleUrl: './camera.css'
+  styleUrl: './camera.css',
 })
 export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
@@ -21,10 +28,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   // Signals
   feedback = signal('Loading ODM...');
-  showDetections = signal(false);
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
   capturedImage = signal<string | null>(null);
+  showDetections = signal(false);
+  showBoxes = signal(false);
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -239,7 +247,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
              479.38,4.23 471.11,2.25 471.11,2.25
              471.11,2.25 465.35,1.71 465.35,1.71
              465.35,1.71 460.68,1.17 460.68,1.17
-             460.68,1.17 404.02,0.81 404.02,0.81 Z`
+             460.68,1.17 404.02,0.81 404.02,0.81 Z`;
   private rectPathData = `M 0.73,0.73
   C 0.73,0.73 595.16,1.10 595.16,1.10
     595.16,1.10 594.79,286.96 594.79,286.96
@@ -253,7 +261,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     // Request camera access early
     try {
       this.feedback.set('Requesting camera access...');
-      this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
       this.feedback.set('Camera ready. Press START.');
     } catch (err) {
       console.error(err);
@@ -265,7 +275,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     if (this.detectionTimer) clearInterval(this.detectionTimer);
     if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
+      this.stream.getTracks().forEach((t) => t.stop());
     }
   }
 
@@ -273,8 +283,16 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.showDetections.update((v) => !v);
   }
 
+  toggleBoxes() {
+    this.showBoxes.update((v) => !v);
+  }
+
   // helper: create scaled Path2D and scales with margin (centered)
-  private createScaledPath(d: string, canvasWidth: number, canvasHeight: number) {
+  private createScaledPath(
+    d: string,
+    canvasWidth: number,
+    canvasHeight: number
+  ) {
     const rawPath = new Path2D(d);
 
     // use 8% margins like your final HTML
@@ -295,9 +313,20 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const offsetY = 16;
 
     const transformed = new Path2D();
-    transformed.addPath(rawPath, new DOMMatrix().translate(offsetX, offsetY).scale(scaleX, scaleY));
+    transformed.addPath(
+      rawPath,
+      new DOMMatrix().translate(offsetX, offsetY).scale(scaleX, scaleY)
+    );
 
-    return { path: transformed, scaleX, scaleY, offsetX, offsetY, scaledWidth, scaledHeight };
+    return {
+      path: transformed,
+      scaleX,
+      scaleY,
+      offsetX,
+      offsetY,
+      scaledWidth,
+      scaledHeight,
+    };
   }
 
   // Start handling the UI 'Start' button click (this is called from template)
@@ -315,7 +344,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // request fullscreen & lock landscape (best-effort)
   private async requestFullscreenAndOrientation() {
     try {
-      await((document.documentElement as any).requestFullScreen?.() ||
+      await ((document.documentElement as any).requestFullScreen?.() ||
         (document.documentElement as any).webkitRequestFullscreen?.() ||
         (document.documentElement as any).mozRequestFullScreen?.() ||
         (document.documentElement as any).msRequestFullscreen?.());
@@ -326,7 +355,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   private async initCameraAndCanvases() {
     if (!this.stream) {
-      this.feedback.set("❌ No camera stream.");
+      this.feedback.set('❌ No camera stream.');
       return;
     }
     const video = this.videoRef.nativeElement;
@@ -335,7 +364,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     video.srcObject = this.stream;
 
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
         // set canvas sizes to video size (important)
         canvas.width = video.videoWidth;
@@ -389,10 +418,15 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     // Restaurar operación normal
     this.overlayCtx.globalCompositeOperation = 'source-over';
 
-    // yellow rect
-    this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
+    // reference rect
+    if (this.showBoxes()) {
+      this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 1)';
+    } else {
+      this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
+    }
     this.overlayCtx.lineWidth = 0;
     this.overlayCtx.stroke(this.rectPath);
+
     // irregular marco
     this.overlayCtx.strokeStyle = 'white';
     this.overlayCtx.lineWidth = 1;
@@ -411,10 +445,17 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const predictions = await this.model.detect(canvas);
-      this.detections.set(predictions.map(p => `${p.class} (${(p.score*100).toFixed(1)}%)`));
+      this.detections.set(
+        predictions.map((p) => `${p.class} (${(p.score * 100).toFixed(1)}%)`)
+      );
 
       // clear overlay and redraw reference shapes
-      this.overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      this.overlayCtx.clearRect(
+        0,
+        0,
+        overlayCanvas.width,
+        overlayCanvas.height
+      );
 
       // 🔹 Dibujar overlay alrededor del marco irregular
       this.overlayCtx.save();
@@ -430,9 +471,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       // Restaurar operación normal
       this.overlayCtx.globalCompositeOperation = 'source-over';
 
-      // draw invisible rect
-      this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
-      this.overlayCtx.lineWidth = 0;
+      // draw reference rect
+      if (this.showBoxes()) {
+        this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 1)';
+      } else {
+        this.overlayCtx.strokeStyle = 'rgba(255, 255, 0 , 0)';
+      }
+      this.overlayCtx.lineWidth = 1;
       this.overlayCtx.stroke(this.rectPath);
 
       // irregular marco
@@ -443,27 +488,45 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.overlayCtx.restore();
 
       // draw detections
-      predictions.forEach(p => {
-        const [x, y, w, h] = p.bbox;
-        this.overlayCtx.strokeStyle = 'red';
-        this.overlayCtx.lineWidth = 2;
-        this.overlayCtx.strokeRect(x, y, w, h);
-        this.overlayCtx.fillStyle = 'red';
-        this.overlayCtx.font = '16px monospace';
-        const labelY = y > 20 ? y - 6 : y + 16;
-        this.overlayCtx.fillText(`${p.class} ${(p.score*100).toFixed(1)}%`, x, labelY);
-      });
+
+      if (this.showBoxes()) {
+        predictions.forEach((p) => {
+          const [x, y, w, h] = p.bbox;
+          this.overlayCtx.strokeStyle = 'red';
+          this.overlayCtx.lineWidth = 2;
+          this.overlayCtx.strokeRect(x, y, w, h);
+
+          this.overlayCtx.fillStyle = 'red';
+          this.overlayCtx.font = '16px monospace';
+          const labelY = y > 20 ? y - 6 : y + 16;
+          this.overlayCtx.fillText(
+            `${p.class} ${(p.score * 100).toFixed(1)}%`,
+            x,
+            labelY
+          );
+        });
+      }
 
       // check car-like classes
-      const car = predictions.find(p => ['car', 'truck', 'bus'].includes(p.class));
+      const car = predictions.find((p) =>
+        ['car', 'truck', 'bus'].includes(p.class)
+      );
       if (car) {
         const [x, y, w, h] = car.bbox;
         // test if bbox corners inside rectPath
-        const dentro = [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([px,py]) => this.overlayCtx.isPointInPath(this.rectPath, px, py));
+        const dentro = [
+          [x, y],
+          [x + w, y],
+          [x, y + h],
+          [x + w, y + h],
+        ].every(([px, py]) =>
+          this.overlayCtx.isPointInPath(this.rectPath, px, py)
+        );
 
         // compute areas: car area vs scaled rect area (use rectScale values)
         const carArea = w * h;
-        const rectArea = (this.svgWidth * this.rectScaleX) * (this.svgHeight * this.rectScaleY);
+        const rectArea =
+          this.svgWidth * this.rectScaleX * (this.svgHeight * this.rectScaleY);
         const proportion = carArea / rectArea;
         this.proportion.set(+proportion.toFixed(3));
 
@@ -474,7 +537,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
-          if (!this.capturedImage()) { // solo capturar si aún no hay foto
+          if (!this.capturedImage()) {
+            // solo capturar si aún no hay foto
             this.capturePhoto();
           }
         }
@@ -492,13 +556,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const ctx = photoCanvas.getContext('2d');
     if (ctx) {
-      ctx.drawImage(this.videoRef.nativeElement, 0, 0, photoCanvas.width, photoCanvas.height);
+      ctx.drawImage(
+        this.videoRef.nativeElement,
+        0,
+        0,
+        photoCanvas.width,
+        photoCanvas.height
+      );
       this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
     }
   }
 
-    usePhoto() {
-    alert("Foto confirmada ✅");
+  usePhoto() {
+    alert('Foto confirmada ✅');
     // Aquí podrías emitir un evento al padre o guardar la foto en backend
   }
 }
