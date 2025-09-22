@@ -18,8 +18,8 @@ export class ChartComponent implements AfterViewInit {
   canvasRef!: ElementRef<HTMLCanvasElement>;
   // receive a signal value via input()
   newValue = input<number | null>(null);
-  nearThreshold = input<number>(0.5);
-  farThreshold = input<number>(0.4);
+  nearThreshold = input<number>(0.65);
+  farThreshold = input<number>(0.5);
 
   private ctx!: CanvasRenderingContext2D;
   private history: number[] = [];
