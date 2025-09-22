@@ -362,14 +362,41 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   capturePhoto() {
-    const photoCanvas = document.createElement('canvas');
-    photoCanvas.width = this.videoRef.nativeElement.videoWidth;
-    photoCanvas.height = this.videoRef.nativeElement.videoHeight;
+    const video = this.videoRef.nativeElement;
 
+    const photoCanvas = document.createElement('canvas');
+    photoCanvas.width = video.videoWidth;
+    photoCanvas.height = video.videoHeight;
     const ctx = photoCanvas.getContext('2d');
+
+    // Calcular proporciones
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const displayRatio =
+      this.overlayCanvasRef.nativeElement.width /
+      this.overlayCanvasRef.nativeElement.height;
+
+    let sx = 0,
+      sy = 0,
+      sWidth = video.videoWidth,
+      sHeight = video.videoHeight;
+
+    if (videoRatio > displayRatio) {
+      // 📐 El video es más ancho que la pantalla → recortar horizontal
+      sWidth = video.videoHeight * displayRatio;
+      sx = (video.videoWidth - sWidth) / 2;
+    } else {
+      // 📐 El video es más alto que la pantalla → recortar vertical
+      sHeight = video.videoWidth / displayRatio;
+      sy = (video.videoHeight - sHeight) / 2;
+    }
+
     if (ctx) {
       ctx.drawImage(
-        this.videoRef.nativeElement,
+        video,
+        sx,
+        sy,
+        sWidth,
+        sHeight,
         0,
         0,
         photoCanvas.width,
