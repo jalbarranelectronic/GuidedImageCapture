@@ -55,8 +55,8 @@
       <input
         type="range"
         class="slider-near"
-        min="0.61"
-        max="0.9"
+        min="0.81"
+        max="1"
         step="0.01"
         [value]="nearThreshold()"
         (input)="setNearThreshold($any($event.target).value)"
@@ -68,8 +68,8 @@
       <input
         type="range"
         class="slider-far"
-        min="0.3"
-        max="0.6"
+        min="0.5"
+        max="0.8"
         step="0.01"
         [value]="farThreshold()"
         (input)="setFarThreshold($any($event.target).value)"

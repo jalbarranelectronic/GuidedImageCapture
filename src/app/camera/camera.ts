@@ -37,8 +37,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   showDetections = signal(false);
   showBoxes = signal(false);
 
-  nearThreshold = signal(0.7); // demasiado cerca
-  farThreshold = signal(0.6); // demasiado lejos
+  nearThreshold = signal(0.9); // demasiado cerca
+  farThreshold = signal(0.7); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
