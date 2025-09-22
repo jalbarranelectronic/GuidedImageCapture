@@ -18,15 +18,15 @@ export class ChartComponent implements AfterViewInit {
   canvasRef!: ElementRef<HTMLCanvasElement>;
   // receive a signal value via input()
   newValue = input<number | null>(null);
-  nearThreshold = input<number>(0.65);
-  farThreshold = input<number>(0.5);
+  nearThreshold = input<number>(0.7);
+  farThreshold = input<number>(0.6);
 
   private ctx!: CanvasRenderingContext2D;
   private history: number[] = [];
   private maxPoints = 50;
 
   private yMin = 0.3;
-  private yMax = 0.6;
+  private yMax = 0.8;
 
   private updateEffect = effect(() => {
     const val = this.newValue();
