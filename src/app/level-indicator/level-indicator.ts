@@ -14,6 +14,7 @@ import {
 })
 export class LevelIndicatorComponent implements OnInit {
   @ViewChild('bubble') bubbleRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('level') levelRef!: ElementRef<HTMLDivElement>;
   status = signal('Level your mobile device...');
   statusColor = signal('red');
 
@@ -37,27 +38,33 @@ export class LevelIndicatorComponent implements OnInit {
 
     // 🎛️ Escuchar orientación del dispositivo
     window.addEventListener('deviceorientation', (event) => {
-      this.beta = event.beta ?? 0; // adelante/atrás
-      this.gamma = event.gamma ?? 0; // izquierda/derecha
+      this.beta = event.beta ?? 0; // adelante/atrás (vertical tilt)
+      this.gamma = event.gamma ?? 0; // izquierda/derecha (horizontal tilt)
+
+      // When device is at front, beta ≈ 90
+      const adjustedBeta = this.beta - 90;
 
       const bubble = this.bubbleRef.nativeElement;
-      const maxOffset = 70;
+      const level = this.levelRef.nativeElement;
+
+      const maxOffset = level.offsetWidth / 2 - bubble.offsetWidth / 2;
+
       const x = Math.max(-maxOffset, Math.min(maxOffset, this.gamma * 2));
       const y = Math.max(-maxOffset, Math.min(maxOffset, this.beta * 2));
 
       bubble.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
 
-      if (Math.abs(this.beta) < 5 && Math.abs(this.gamma) < 5) {
+      if (Math.abs(this.beta) < 10 && Math.abs(this.gamma) < 10) {
         this.status.set('');
         this.statusColor.set('green');
       } else {
-        this.status.set('❌ Level your mobile device...');
+        this.status.set('❌');
         this.statusColor.set('red');
       }
     });
   }
 
-  isPerpendicular(threshold = 5): boolean {
+  isPerpendicular(threshold = 10): boolean {
     return Math.abs(this.beta) < threshold && Math.abs(this.gamma) < threshold;
   }
 }

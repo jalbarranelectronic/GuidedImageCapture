@@ -353,7 +353,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         } else if (prop < this.farThreshold()) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
-          if (!this.levelIndicator.isPerpendicular(5)) {
+          if (!this.levelIndicator.isPerpendicular(10)) {
             alert('❌ Straighten your phone before taking the photo.');
             return;
           }
