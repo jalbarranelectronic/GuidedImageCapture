@@ -41,8 +41,8 @@ export class LevelIndicatorComponent implements OnInit {
       this.beta = event.beta ?? 0; // adelante/atrás (vertical tilt)
       this.gamma = event.gamma ?? 0; // izquierda/derecha (horizontal tilt)
 
-      // When device is at front, beta ≈ 90
-      const adjustedBeta = this.beta - 90;
+      // When device is pointing at front, beta ≈ 90
+      this.beta = this.beta - 90;
 
       const bubble = this.bubbleRef.nativeElement;
       const level = this.levelRef.nativeElement;
