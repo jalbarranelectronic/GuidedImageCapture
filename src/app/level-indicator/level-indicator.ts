@@ -40,6 +40,7 @@ export class LevelIndicatorComponent implements OnInit {
       this.beta = event.beta ?? 0; // adelante/atrás
       this.gamma = event.gamma ?? 0; // izquierda/derecha
       this.beta = this.beta - 90;
+      this.gamma = this.gamma - 90;
 
       const bubble = this.bubbleRef.nativeElement;
       const maxOffset = 70;
