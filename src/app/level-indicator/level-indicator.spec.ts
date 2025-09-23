@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LevelIndicator } from './level-indicator';
+import { LevelIndicatorComponent } from './level-indicator';
 
 describe('LevelIndicator', () => {
-  let component: LevelIndicator;
-  let fixture: ComponentFixture<LevelIndicator>;
+  let component: LevelIndicatorComponent;
+  let fixture: ComponentFixture<LevelIndicatorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LevelIndicator]
-    })
-    .compileComponents();
+      imports: [LevelIndicatorComponent],
+    }).compileComponents();
 
-    fixture = TestBed.createComponent(LevelIndicator);
+    fixture = TestBed.createComponent(LevelIndicatorComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

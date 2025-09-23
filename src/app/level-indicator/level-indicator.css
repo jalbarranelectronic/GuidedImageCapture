@@ -1,0 +1,29 @@
+#level {
+  position: relative;
+  width: 100px; /* antes 200px */
+  height: 100px; /* antes 200px */
+  border: 2px solid #333;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+  margin: auto;
+}
+
+#bubble {
+  position: absolute;
+  width: 20px; /* antes 40px */
+  height: 20px; /* antes 40px */
+  background: rgba(0, 200, 0, 0.7);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+#status {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}

@@ -333,3 +333,11 @@ button.confirm {
 .slider-far::-moz-range-thumb {
   background: #f39c12;
 }
+
+.level-container {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%); /* centrado vertical */
+  z-index: 2000;
+}

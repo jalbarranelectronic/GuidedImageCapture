@@ -12,13 +12,14 @@ import '@tensorflow/tfjs-backend-cpu';
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
+import { LevelIndicatorComponent } from '../level-indicator/level-indicator';
 import { RECT_PATH } from '../shapes/rect-shape';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 
 @Component({
   selector: 'app-camera',
   standalone: true,
-  imports: [CommonModule, ChartComponent],
+  imports: [CommonModule, ChartComponent, LevelIndicatorComponent],
   templateUrl: './camera.html',
   styleUrl: './camera.css',
 })
@@ -27,6 +28,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
+  @ViewChild(LevelIndicatorComponent) levelIndicator!: LevelIndicatorComponent;
 
   // Signals
   feedback = signal('Loading ODM...');
@@ -45,6 +47,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   private model!: cocoSsd.ObjectDetection;
   private detectionTimer: any;
   private stream: MediaStream | null = null;
+
+  // Animate flag
+  private animate = false;
 
   // Paths and scales
   private marcoPath!: Path2D;
@@ -348,7 +353,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         } else if (prop < this.farThreshold()) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
+          if (!this.levelIndicator.isPerpendicular(5)) {
+            alert('❌ Straighten your phone before taking the photo.');
+            return;
+          }
           this.feedback.set("Perfect! Don't move, capturing... 📸");
+
           if (!this.capturedImage()) {
             // solo capturar si aún no hay foto
             this.capturePhoto();
