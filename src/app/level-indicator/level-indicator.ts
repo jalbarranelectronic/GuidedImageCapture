@@ -39,6 +39,7 @@ export class LevelIndicatorComponent implements OnInit {
     window.addEventListener('deviceorientation', (event) => {
       this.beta = event.beta ?? 0; // adelante/atrás
       this.gamma = event.gamma ?? 0; // izquierda/derecha
+      this.beta = this.beta - 90;
 
       const bubble = this.bubbleRef.nativeElement;
       const maxOffset = 70;
@@ -51,13 +52,13 @@ export class LevelIndicatorComponent implements OnInit {
         this.status.set('');
         this.statusColor.set('green');
       } else {
-        this.status.set('❌ Level your mobile device...');
+        this.status.set('❌');
         this.statusColor.set('red');
       }
     });
   }
 
-  isPerpendicular(threshold = 5): boolean {
+  isPerpendicular(threshold = 10): boolean {
     return Math.abs(this.beta) < threshold && Math.abs(this.gamma) < threshold;
   }
 }
