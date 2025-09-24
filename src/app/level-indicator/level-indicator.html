@@ -1,4 +1,9 @@
-<div id="level">
-  <div #bubble id="bubble"></div>
+<div class="level-wrapper">
+  <div #level id="level">
+    <div #bubble id="bubble"></div>
+  </div>
+
+  <div id="status" [style.color]="statusColor()">
+    {{ status() }}
+  </div>
 </div>
-<div id="status" [style.color]="statusColor()">{{ status() }}</div>

@@ -13,12 +13,11 @@ import {
   styleUrl: './level-indicator.css',
 })
 export class LevelIndicatorComponent implements OnInit {
-  @ViewChild('bubble') bubbleRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('level', { static: true }) levelRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('bubble', { static: true }) bubbleRef!: ElementRef<HTMLDivElement>;
+
   status = signal('Level your mobile device...');
   statusColor = signal('red');
-
-  private beta = 0;
-  private gamma = 0;
 
   ngOnInit() {
     // 📱 Pedir permiso en iOS
@@ -36,29 +35,63 @@ export class LevelIndicatorComponent implements OnInit {
     );
 
     // 🎛️ Escuchar orientación del dispositivo
-    window.addEventListener('deviceorientation', (event) => {
-      this.beta = event.beta ?? 0; // adelante/atrás
-      this.gamma = event.gamma ?? 0; // izquierda/derecha
-      this.beta = this.beta - 45;
+    window.addEventListener('deviceorientation', (event) =>
+      this.onDeviceOrientation(event)
+    );
+  }
 
-      const bubble = this.bubbleRef.nativeElement;
-      const maxOffset = 70;
-      const x = Math.max(-maxOffset, Math.min(maxOffset, this.gamma * 2));
-      const y = Math.max(-maxOffset, Math.min(maxOffset, this.beta * 2));
+  private onDeviceOrientation(evt: DeviceOrientationEvent) {
+    const beta = evt.beta ?? 0; // adelante/atrás
+    const gamma = evt.gamma ?? 0; // izquierda/derecha
 
-      bubble.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    // Ajustar: cámara apuntando al frente → beta ≈ 90
+    const adjustedBeta = beta - 90;
 
-      if (Math.abs(this.beta) < 5 && Math.abs(this.gamma) < 5) {
-        this.status.set('');
-        this.statusColor.set('green');
-      } else {
-        this.status.set('❌');
-        this.statusColor.set('red');
-      }
-    });
+    const levelEl = this.levelRef?.nativeElement;
+    const bubbleEl = this.bubbleRef?.nativeElement;
+    if (!levelEl || !bubbleEl) return;
+
+    const size = levelEl.offsetWidth;
+    const bubbleSize = bubbleEl.offsetWidth;
+    const maxOffset = (size - bubbleSize) / 2;
+
+    // factor para controlar sensibilidad
+    const factor = 2;
+
+    const x = Math.max(-maxOffset, Math.min(maxOffset, gamma * factor));
+    const y = Math.max(-maxOffset, Math.min(maxOffset, adjustedBeta * factor));
+
+    bubbleEl.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+
+    // criterio: burbuja dentro del círculo → nivelado
+    const distance = Math.sqrt(x * x + y * y);
+    if (distance < maxOffset) {
+      this.status.set('✅ Cámara nivelada');
+      this.statusColor.set('green');
+    } else {
+      this.status.set('❌ Ajusta el móvil...');
+      this.statusColor.set('red');
+    }
   }
 
   isPerpendicular(threshold = 10): boolean {
-    return Math.abs(this.beta) < threshold && Math.abs(this.gamma) < threshold;
+    const levelEl = this.levelRef?.nativeElement;
+    const bubbleEl = this.bubbleRef?.nativeElement;
+    if (!levelEl || !bubbleEl) return false;
+
+    const lb = levelEl.getBoundingClientRect();
+    const bb = bubbleEl.getBoundingClientRect();
+
+    const cxLevel = lb.left + lb.width / 2;
+    const cyLevel = lb.top + lb.height / 2;
+    const cxBubble = bb.left + bb.width / 2;
+    const cyBubble = bb.top + bb.height / 2;
+
+    const dx = cxBubble - cxLevel;
+    const dy = cyBubble - cyLevel;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    const radius = (levelEl.offsetWidth - bubbleEl.offsetWidth) / 2;
+    return dist <= radius;
   }
 }
