@@ -22,14 +22,14 @@ import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
   templateUrl: './camera.html',
   styleUrl: './camera.css',
 })
-export class CameraComponent implements AfterViewInit, OnDestroy {
+export class CameraComponent implements OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
 
   // Signals
-  feedback = signal('Loading ODM...');
+  feedback = signal("Press 'Start capture' button");
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
   capturedImage = signal<string | null>(null);
@@ -61,22 +61,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   private svgWidth = 597;
   private svgHeight = 289;
-
-  async ngAfterViewInit() {
-    // Request camera access early
-    try {
-      this.feedback.set('Requesting camera access...');
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: { facingMode: 'environment' },
-      });
-      this.feedback.set('Camera ready. Press START.');
-    } catch (err) {
-      console.error(err);
-      this.feedback.set("❌ Couldn't access the camera.");
-      return;
-    }
-  }
 
   ngOnDestroy() {
     if (this.detectionTimer) clearInterval(this.detectionTimer);
@@ -166,10 +150,24 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   private async initCameraAndCanvases() {
+    try {
+      this.feedback.set('Requesting camera access...');
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: 'environment' },
+      });
+      this.feedback.set('Camera ready.');
+    } catch (err) {
+      console.error(err);
+      this.feedback.set("❌ Couldn't access the camera.");
+      return;
+    }
+
     if (!this.stream) {
       this.feedback.set('❌ No camera stream.');
       return;
     }
+
     const video = this.videoRef.nativeElement;
     const canvas = this.canvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
