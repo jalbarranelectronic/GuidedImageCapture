@@ -67,6 +67,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     try {
       this.feedback.set('Requesting camera access...');
       this.stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
         video: { facingMode: 'environment' },
       });
       this.feedback.set('Camera ready. Press START.');
@@ -174,9 +175,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
 
     video.srcObject = this.stream;
-    video.setAttribute('autoplay', '');
-    video.setAttribute('muted', '');
-    video.setAttribute('playsinline', '');
 
     await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
