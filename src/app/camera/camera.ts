@@ -12,14 +12,13 @@ import '@tensorflow/tfjs-backend-cpu';
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
-import { LevelIndicatorComponent } from '../level-indicator/level-indicator';
 import { RECT_PATH } from '../shapes/rect-shape';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 
 @Component({
   selector: 'app-camera',
   standalone: true,
-  imports: [CommonModule, ChartComponent, LevelIndicatorComponent],
+  imports: [CommonModule, ChartComponent],
   templateUrl: './camera.html',
   styleUrl: './camera.css',
 })
@@ -28,7 +27,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
-  @ViewChild(LevelIndicatorComponent) levelIndicator!: LevelIndicatorComponent;
 
   // Signals
   feedback = signal('Loading ODM...');
@@ -108,9 +106,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     canvasWidth: number,
     canvasHeight: number
   ) {
-    // use 8% margins like your final HTML
-    const marginX = canvasWidth * 0.08;
-    const marginY = canvasHeight * 0.08;
+    // use 10% margins like your final HTML
+    const marginX = canvasWidth * 0.1;
+    const marginY = canvasHeight * 0.1;
 
     const availableWidth = canvasWidth - 2 * marginX;
     const availableHeight = canvasHeight - 2 * marginY;
@@ -176,6 +174,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
 
     video.srcObject = this.stream;
+    video.setAttribute('autoplay', '');
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
 
     await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
@@ -197,7 +198,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   private async loadModel() {
     this.feedback.set('Loading model...');
-    this.model = await cocoSsd.load({ base: 'mobilenet_v2' });
+    this.model = await cocoSsd.load();
     this.feedback.set('ODM completely loaded. Press Start to search car...');
   }
 
@@ -221,6 +222,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
 
+    // 🔹 Dibujar overlay y marcos de referencia
+    this.drawBackgroundAndRefereceCanvas(overlayCanvas);
+  }
+
+  private drawBackgroundAndRefereceCanvas(overlayCanvas: HTMLCanvasElement) {
     // 🔹 Dibujar overlay alrededor del marco irregular
     this.overlayCtx.save();
 
@@ -246,7 +252,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // irregular marco
     this.overlayCtx.strokeStyle = 'white';
-    this.overlayCtx.lineWidth = 1;
+    this.overlayCtx.lineWidth = 2;
     this.overlayCtx.setLineDash([]);
     this.overlayCtx.stroke(this.marcoPath);
     this.overlayCtx.restore();
@@ -274,35 +280,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         overlayCanvas.height
       );
 
-      // 🔹 Dibujar overlay alrededor del marco irregular
-      this.overlayCtx.save();
-
-      // Pintar todo el fondo con color semi-transparente
-      this.overlayCtx.fillStyle = 'rgba(39, 39, 39, 0.50)'; // #272727 con 50% opacidad
-      this.overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-      // Cambiar modo de mezcla para "recortar" el marco
-      this.overlayCtx.globalCompositeOperation = 'destination-out';
-      this.overlayCtx.fill(this.marcoPath);
-
-      // Restaurar operación normal
-      this.overlayCtx.globalCompositeOperation = 'source-over';
-
-      // draw reference rect
-      if (this.showBoxes()) {
-        this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 1)';
-      } else {
-        this.overlayCtx.strokeStyle = 'rgba(255, 255, 0 , 0)';
-      }
-      this.overlayCtx.lineWidth = 1;
-      this.overlayCtx.stroke(this.rectPath);
-
-      // irregular marco
-      this.overlayCtx.strokeStyle = 'white';
-      this.overlayCtx.lineWidth = 1;
-      this.overlayCtx.setLineDash([]);
-      this.overlayCtx.stroke(this.marcoPath);
-      this.overlayCtx.restore();
+      // 🔹  Dibujar overlay y marcos de referencia
+      this.drawBackgroundAndRefereceCanvas(overlayCanvas);
 
       // draw detections
 
@@ -353,10 +332,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         } else if (prop < this.farThreshold()) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
-          if (!this.levelIndicator.isPerpendicular(10)) {
-            alert('❌ Straighten your phone before taking the photo.');
-            return;
-          }
           this.feedback.set("Perfect! Don't move, capturing... 📸");
 
           if (!this.capturedImage()) {
