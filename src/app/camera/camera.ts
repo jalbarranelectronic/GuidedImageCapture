@@ -368,7 +368,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     ctx?.drawImage(
       video,
       offsetX,
-      offsetY,
+      newOffsetY, //offsetY,
       scaledWidth,
       newHeight, //scaledHeight,
       0,
