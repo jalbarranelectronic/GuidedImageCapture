@@ -362,19 +362,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const photoCanvas = document.createElement('canvas');
     photoCanvas.width = scaledWidth;
-    photoCanvas.height = newHeight; //scaledHeight;
+    photoCanvas.height = scaledHeight;
 
     const ctx = photoCanvas.getContext('2d');
     ctx?.drawImage(
       video,
       offsetX,
-      newOffsetY, //offsetY,
+      offsetY,
       scaledWidth,
-      newHeight, //scaledHeight,
+      scaledHeight,
       0,
       0,
       scaledWidth,
-      newHeight //scaledHeight
+      scaledHeight
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
   }
