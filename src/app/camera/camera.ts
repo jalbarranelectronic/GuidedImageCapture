@@ -374,7 +374,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       0,
       0,
       scaledWidth,
-      scaledHeight
+      newHeight //scaledHeight
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
   }
