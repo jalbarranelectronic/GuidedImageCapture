@@ -355,14 +355,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     // We will cut the image to this rectangle
     const { offsetX, offsetY, scaledWidth, scaledHeight } = this.rectMetrics;
 
-    // We cut 8% from the bottom and 8% from the top
-    // const marginY = scaledHeight * 0.8;
-    // const newHeight = scaledHeight - 2 * marginY;
-    // const newOffsetY = offsetY + marginY;
+    // We cut 5% from the bottom and 5% from the top
+    const marginY = scaledHeight * 0.5;
+    const newHeight = scaledHeight - 2 * marginY;
+    const newOffsetY = offsetY + marginY;
 
     const photoCanvas = document.createElement('canvas');
     photoCanvas.width = scaledWidth;
-    photoCanvas.height = scaledHeight; //newHeight;
+    photoCanvas.height = newHeight; //scaledHeight;
 
     const ctx = photoCanvas.getContext('2d');
     ctx?.drawImage(
@@ -370,7 +370,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       offsetX,
       offsetY,
       scaledWidth,
-      scaledHeight,
+      newHeight, //scaledHeight,
       0,
       0,
       scaledWidth,
