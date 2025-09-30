@@ -15,6 +15,7 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
 import { RECT_PATH } from '../shapes/rect-shape';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
+import { RectMetrics } from './rect-metrics';
 
 @Component({
   selector: 'app-camera',
@@ -40,8 +41,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   showDetections = signal(false);
   showBoxes = signal(false);
 
-  nearThreshold = signal(0.93); // demasiado cerca
-  farThreshold = signal(0.85); // demasiado lejos
+  nearThreshold = signal(0.98); // demasiado cerca
+  farThreshold = signal(0.9); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -55,8 +56,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // Paths and scales
   // private marcoPath2D!: Path2D;
   private rectPath2D!: Path2D;
-  private rectScaleX = 1;
-  private rectScaleY = 1;
+  private rectMetrics: RectMetrics = {
+    scaleX: 0,
+    scaleY: 0,
+    offsetX: 0,
+    offsetY: 0,
+    scaledWidth: 0,
+    scaledHeight: 0,
+  };
 
   // Car outline data
   outlinePathData = FRONTLEFT_PATH;
@@ -105,8 +112,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     canvasWidth: number,
     canvasHeight: number
   ) {
-    // use 10% margins like your final HTML
-    const marginX = canvasWidth * 0.08;
+    const marginX = canvasWidth * 0.05;
     const marginY = canvasHeight * 0.08;
 
     const availableWidth = canvasWidth - 2 * marginX;
@@ -219,8 +225,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const rectResult = this.createScaledPath(this.rectPath, w, h);
     this.rectPath2D = rectResult.path;
-    this.rectScaleX = rectResult.scaleX;
-    this.rectScaleY = rectResult.scaleY;
+    this.rectMetrics.offsetX = rectResult.offsetX;
+    this.rectMetrics.offsetY = rectResult.offsetY;
+    this.rectMetrics.scaleX = rectResult.scaleX;
+    this.rectMetrics.scaleY = rectResult.scaleY;
+    this.rectMetrics.scaledWidth = rectResult.scaledWidth;
+    this.rectMetrics.scaledHeight = rectResult.scaledHeight;
 
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
@@ -318,7 +328,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         );
 
         const carWidth = w;
-        const rectWidth = this.svgWidth * this.rectScaleX;
+        const rectWidth = this.svgWidth * this.rectMetrics.scaleX;
         const proportion = carWidth / rectWidth;
         this.proportion.set(+proportion.toFixed(3));
         console.log(proportion);
@@ -342,46 +352,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   capturePhoto() {
     const video = this.videoRef.nativeElement;
+    // We will cut the image to this rectangle
+    const { offsetX, offsetY, scaledWidth, scaledHeight } = this.rectMetrics;
+
+    // We cut 8% from the bottom and 8% from the top
+    const marginY = scaledHeight * 0.8;
+    const newHeight = scaledHeight - 2 * marginY;
+    const newOffsetY = offsetY + marginY;
 
     const photoCanvas = document.createElement('canvas');
-    photoCanvas.width = video.videoWidth;
-    photoCanvas.height = video.videoHeight;
+    photoCanvas.width = scaledWidth;
+    photoCanvas.height = newHeight;
+
     const ctx = photoCanvas.getContext('2d');
-
-    // Calcular proporciones
-    const videoRatio = video.videoWidth / video.videoHeight;
-    const displayRatio =
-      (this.svgWidth * this.rectScaleX) / (this.svgHeight * this.rectScaleY);
-
-    let sx = 0,
-      sy = 0,
-      sWidth = video.videoWidth,
-      sHeight = video.videoHeight;
-
-    if (videoRatio > displayRatio) {
-      // 📐 El video es más ancho que la pantalla → recortar horizontal
-      sWidth = video.videoHeight * displayRatio;
-      sx = (video.videoWidth - sWidth) / 2;
-    } else {
-      // 📐 El video es más alto que la pantalla → recortar vertical
-      sHeight = video.videoWidth / displayRatio;
-      sy = (video.videoHeight - sHeight) / 2;
-    }
-
-    if (ctx) {
-      ctx.drawImage(
-        video,
-        sx,
-        sy,
-        sWidth,
-        sHeight,
-        0,
-        0,
-        photoCanvas.width,
-        photoCanvas.height
-      );
-      this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
-    }
+    ctx?.drawImage(
+      video,
+      offsetX,
+      offsetY,
+      scaledWidth,
+      scaledHeight,
+      0,
+      0,
+      scaledWidth,
+      scaledHeight
+    );
+    this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
   }
 
   usePhoto() {
