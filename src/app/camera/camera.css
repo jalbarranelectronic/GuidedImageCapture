@@ -6,7 +6,12 @@
   overflow: hidden;
   position: relative;
 }
-
+.camera-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 #video {
   position: absolute;
   top: 0;
@@ -15,6 +20,27 @@
   height: 100vh;
   object-fit: cover;
 }
+#overlay-box {
+  width: 100%;
+  height: 100%;
+  fill: rgba(39, 39, 39, 0.5);
+  mask: url(#hole-mask);
+}
+.marco-container {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding-top: 15px;
+  max-height: calc(100% - 71px);
+}
+
+.marco-svg {
+  width: 100%;
+  height: 100%;
+}
+
 #overlayCanvas {
   position: absolute;
   top: 0;
@@ -23,6 +49,7 @@
   height: 100vh;
   pointer-events: none;
 }
+
 #startBtn {
   position: absolute;
   top: 50%;
@@ -37,6 +64,7 @@
   color: white;
   cursor: pointer;
 }
+
 #feedback {
   position: fixed; /* anclado */
   display: flex;
@@ -362,4 +390,55 @@ button.confirm {
   left: 10px;
   transform: translateY(-50%); /* centrado vertical */
   z-index: 2000;
+}
+
+/* Car outline animation */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rect-path {
+  stroke: white;
+  stroke-width: 2;
+  fill: transparent;
+  mask: url(#corner-mask);
+}
+
+.irregular-path {
+  fill: transparent;
+  stroke-width: 2;
+  stroke: white;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition: stroke-width 0.3s ease;
+  transform: scale(0.95);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+#outline-hole {
+  transform: scale(0.9);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Glow animado */
+.glow .irregular-path {
+  stroke: url(#glowGradient);
+  stroke-width: 3;
+  stroke-dasharray: var(--path-length);
+  stroke-dashoffset: var(--path-length);
+  animation: dashGlow 1s linear forwards;
+  filter: drop-shadow(0 0 6px #0ff) drop-shadow(0 0 12px #0f0);
+}
+
+@keyframes dashGlow {
+  to {
+    stroke-dashoffset: 0;
+  }
 }

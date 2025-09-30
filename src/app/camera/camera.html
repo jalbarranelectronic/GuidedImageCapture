@@ -13,8 +13,6 @@
   </div>
 </div>
 
-<div id="feedback">{{ feedback() }}</div>
-
 <!-- Toggle switch -->
 <div class="toggle-panel">
   <div class="toggle-item">
@@ -98,11 +96,61 @@
   </svg>
 </div>
 
-<!-- Indicador de nivelación -->
-<!-- <div class="level-container">
-  <app-level-indicator></app-level-indicator>
-</div> -->
+<!-- Marco irregular en SVG -->
+<div class="marco-container">
+  <svg class="marco-svg" [class.glow]="isAnimating">
+    <defs>
+      <!-- Gradiente animado -->
+      <linearGradient id="glowGradient" gradientTransform="rotate(90)">
+        <stop offset="0%" stop-color="#0ff" />
+        <stop offset="50%" stop-color="#0f0" />
+        <stop offset="100%" stop-color="#0ff" />
+      </linearGradient>
+      <mask id="corner-mask">
+        <polygon fill="#ffffff" points="0 0, 0 25, 25 0"></polygon>
+        <polygon fill="#ffffff" points="572 0, 597 0, 597 25"></polygon>
+        <polygon fill="#ffffff" points="597 289, 572 289, 597 264"></polygon>
+        <polygon fill="#ffffff" points="0 289, 0 264, 25 289"></polygon>
+      </mask>
+      <mask id="hole-mask">
+        <symbol
+          id="reference-frame-mask"
+          [attr.viewBox]="0 + ' ' + 0 + ' ' + svgWidth + ' ' + svgHeight"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <path id="outline-hole" [attr.d]="outlinePathData" fill="#000" />
+        </symbol>
+        <rect x="0" y="0" width="100%" height="100%" fill="#FFF" />
+        <use
+          href="#reference-frame-mask"
+          transform="scale(1.05)"
+          style="transform-origin: center; transform-box: fill-box"
+        />
+      </mask>
+      <symbol
+        id="reference-frame"
+        [attr.viewBox]="0 + ' ' + 0 + ' ' + svgWidth + ' ' + svgHeight"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <path
+          #rectPath
+          id="rectPath"
+          [attr.d]="rectPathData"
+          class="rect-path"
+        />
+        <path
+          #irregularPath
+          [attr.d]="outlinePathData"
+          class="irregular-path"
+        />
+      </symbol>
+    </defs>
+    <rect id="overlay-box" x="0" y="0" />
+    <use href="#reference-frame" />
+  </svg>
+</div>
 
+<div id="feedback">{{ feedback() }}</div>
 <div class="orientation-warning">
   <div class="orientation-content">
     <div class="phone-icon"></div>

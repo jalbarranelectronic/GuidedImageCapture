@@ -5,6 +5,7 @@ import {
   ElementRef,
   ViewChild,
   signal,
+  viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as tf from '@tensorflow/tfjs';
@@ -22,11 +23,13 @@ import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
   templateUrl: './camera.html',
   styleUrl: './camera.css',
 })
-export class CameraComponent implements OnDestroy {
+export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
+  @ViewChild('irregularPath') irregularPathRef!: ElementRef<SVGPathElement>;
+  @ViewChild('rectPath') rectPathRef!: ElementRef<SVGPathElement>;
 
   // Signals
   feedback = signal("Press 'Start capture' button");
@@ -37,8 +40,8 @@ export class CameraComponent implements OnDestroy {
   showDetections = signal(false);
   showBoxes = signal(false);
 
-  nearThreshold = signal(0.9); // demasiado cerca
-  farThreshold = signal(0.7); // demasiado lejos
+  nearThreshold = signal(0.93); // demasiado cerca
+  farThreshold = signal(0.85); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -47,20 +50,31 @@ export class CameraComponent implements OnDestroy {
   private stream: MediaStream | null = null;
 
   // Animate flag
-  private animate = false;
+  isAnimating = false;
 
   // Paths and scales
-  private marcoPath!: Path2D;
-  private rectPath!: Path2D;
+  // private marcoPath2D!: Path2D;
+  private rectPath2D!: Path2D;
   private rectScaleX = 1;
   private rectScaleY = 1;
 
   // Car outline data
+  outlinePathData = FRONTLEFT_PATH;
+  rectPathData = RECT_PATH;
   private frontLeftOutlinePathData = new Path2D(FRONTLEFT_PATH);
-  private rectPathData = new Path2D(RECT_PATH);
+  private rectPath = new Path2D(RECT_PATH);
 
-  private svgWidth = 597;
-  private svgHeight = 289;
+  svgWidth = 597;
+  svgHeight = 289;
+
+  ngAfterViewInit() {
+    // Configurar dasharray dinámicamente según la longitud del path
+    const pathEl = this.irregularPathRef.nativeElement;
+    const length = pathEl.getTotalLength();
+    pathEl.style.setProperty('--path-length', `${length}`);
+    /*pathEl.style.strokeDasharray = `${length}`;
+    pathEl.style.strokeDashoffset = `${length}`;*/
+  }
 
   ngOnDestroy() {
     if (this.detectionTimer) clearInterval(this.detectionTimer);
@@ -92,8 +106,8 @@ export class CameraComponent implements OnDestroy {
     canvasHeight: number
   ) {
     // use 10% margins like your final HTML
-    const marginX = canvasWidth * 0.1;
-    const marginY = canvasHeight * 0.1;
+    const marginX = canvasWidth * 0.08;
+    const marginY = canvasHeight * 0.08;
 
     const availableWidth = canvasWidth - 2 * marginX;
     const availableHeight = canvasHeight - 2 * marginY;
@@ -106,7 +120,7 @@ export class CameraComponent implements OnDestroy {
 
     // center within the available area
     const offsetX = marginX + (availableWidth - scaledWidth) / 2;
-    const offsetY = 16;
+    const offsetY = 15;
 
     const transformed = new Path2D();
     transformed.addPath(
@@ -203,17 +217,10 @@ export class CameraComponent implements OnDestroy {
     const w = overlayCanvas.width;
     const h = overlayCanvas.height;
 
-    const rectResult = this.createScaledPath(this.rectPathData, w, h);
-    this.rectPath = rectResult.path;
+    const rectResult = this.createScaledPath(this.rectPath, w, h);
+    this.rectPath2D = rectResult.path;
     this.rectScaleX = rectResult.scaleX;
     this.rectScaleY = rectResult.scaleY;
-
-    const marcoResult = this.createScaledPath(
-      this.frontLeftOutlinePathData,
-      w,
-      h
-    );
-    this.marcoPath = marcoResult.path;
 
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
@@ -223,19 +230,27 @@ export class CameraComponent implements OnDestroy {
   }
 
   private drawBackgroundAndRefereceCanvas(overlayCanvas: HTMLCanvasElement) {
-    // 🔹 Dibujar overlay alrededor del marco irregular
-    this.overlayCtx.save();
+    // const marcoPath2D = new Path2D(FRONTLEFT_PATH);
 
-    // Pintar todo el fondo con color semi-transparente
-    this.overlayCtx.fillStyle = 'rgba(39, 39, 39, 0.50)'; // #272727 con 50% opacidad
-    this.overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    // let scaledMarcoPath2D = this.createScaledPath(
+    //   marcoPath2D,
+    //   this.svgWidth,
+    //   this.svgHeight
+    // );
 
-    // Cambiar modo de mezcla para "recortar" el marco
-    this.overlayCtx.globalCompositeOperation = 'destination-out';
-    this.overlayCtx.fill(this.marcoPath);
+    // // 🔹 Dibujar overlay alrededor del marco irregular
+    // this.overlayCtx.save();
 
-    // Restaurar operación normal
-    this.overlayCtx.globalCompositeOperation = 'source-over';
+    // // Pintar todo el fondo con color semi-transparente
+    // this.overlayCtx.fillStyle = 'rgba(39, 39, 39, 0.50)'; // #272727 con 50% opacidad
+    // this.overlayCtx.fillRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    // // Cambiar modo de mezcla para "recortar" el marco
+    // this.overlayCtx.globalCompositeOperation = 'destination-out';
+    // this.overlayCtx.fill(marcoPath2D);
+
+    // // Restaurar operación normal
+    // this.overlayCtx.globalCompositeOperation = 'source-over';
 
     // reference rect
     if (this.showBoxes()) {
@@ -244,14 +259,51 @@ export class CameraComponent implements OnDestroy {
       this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
     }
     this.overlayCtx.lineWidth = 0;
-    this.overlayCtx.stroke(this.rectPath);
+    this.overlayCtx.stroke(this.rectPath2D);
 
     // irregular marco
-    this.overlayCtx.strokeStyle = 'white';
-    this.overlayCtx.lineWidth = 2;
-    this.overlayCtx.setLineDash([]);
-    this.overlayCtx.stroke(this.marcoPath);
-    this.overlayCtx.restore();
+    // this.overlayCtx.strokeStyle = 'white';
+    // this.overlayCtx.lineWidth = 2;
+    // this.overlayCtx.setLineDash([]);
+    // this.overlayCtx.stroke(this.marcoPath);
+    // this.overlayCtx.restore();
+  }
+
+  private animateFrameGlow() {
+    if (this.isAnimating) return;
+    this.isAnimating = true;
+
+    const svgEl = this.irregularPathRef.nativeElement.closest('svg');
+    svgEl?.classList.add('glow');
+
+    setTimeout(() => {
+      this.capturePhoto(); // tu lógica de captura
+      this.isAnimating = false;
+      svgEl?.classList.remove('glow');
+    }, 1000);
+
+    /*const pathEl = this.irregularPathRef.nativeElement;
+    const length = pathEl.getTotalLength();
+
+    // Reinicia el estado
+    pathEl.style.strokeDasharray = `${length}`;
+    pathEl.style.strokeDashoffset = `${length}`;
+
+    // fuerza reflow para que la animación se reinicie
+    void pathEl.getBoundingClientRect();
+
+    // aplica clase glow (corre animación CSS)
+    pathEl.classList.add('irregular-path'); // asegura base
+    pathEl.closest('svg')?.classList.add('glow');
+
+    setTimeout(() => {
+      if (!this.capturedImage()) {
+        // solo capturar si aún no hay foto
+        this.capturePhoto();
+      }
+      this.isAnimating = false;
+      pathEl.closest('svg')?.classList.remove('glow');
+    }, 1000);*/
   }
 
   private runDetectionLoop() {
@@ -305,34 +357,37 @@ export class CameraComponent implements OnDestroy {
       );
       if (car) {
         const [x, y, w, h] = car.bbox;
+
         // test if bbox corners inside rectPath
+
         const dentro = [
           [x, y],
           [x + w, y],
           [x, y + h],
           [x + w, y + h],
         ].every(([px, py]) =>
-          this.overlayCtx.isPointInPath(this.rectPath, px, py)
+          this.overlayCtx.isPointInPath(this.rectPath2D, px, py)
         );
 
         // compute areas: car area vs scaled rect area (use rectScale values)
-        const carArea = w * h;
-        const rectArea =
-          this.svgWidth * this.rectScaleX * (this.svgHeight * this.rectScaleY);
-        const proportion = carArea / rectArea;
+        // const carArea = w * h;
+        // const rectArea =
+        //   this.svgWidth * this.rectScaleX * (this.svgHeight * this.rectScaleY);
+        // const proportion = carArea / rectArea;
+        const carWidth = w;
+        const rectWidth = this.svgWidth * this.rectScaleX;
+        const proportion = carWidth / rectWidth;
         this.proportion.set(+proportion.toFixed(3));
-
-        const prop = proportion;
-        if (!dentro || prop > this.nearThreshold()) {
+        console.log(proportion);
+        if (!dentro || proportion > this.nearThreshold()) {
           this.feedback.set('Adjust the framing or step back a little. 🚗⬅️');
-        } else if (prop < this.farThreshold()) {
+        } else if (proportion < this.farThreshold()) {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
 
-          if (!this.capturedImage()) {
-            // solo capturar si aún no hay foto
-            this.capturePhoto();
+          if (!this.isAnimating) {
+            this.animateFrameGlow();
           }
         }
       } else {
@@ -352,9 +407,11 @@ export class CameraComponent implements OnDestroy {
 
     // Calcular proporciones
     const videoRatio = video.videoWidth / video.videoHeight;
+    // const displayRatio =
+    //   this.overlayCanvasRef.nativeElement.width /
+    //   this.overlayCanvasRef.nativeElement.height;
     const displayRatio =
-      this.overlayCanvasRef.nativeElement.width /
-      this.overlayCanvasRef.nativeElement.height;
+      (this.svgWidth * this.rectScaleX) / (this.svgHeight * this.rectScaleY);
 
     let sx = 0,
       sy = 0,
