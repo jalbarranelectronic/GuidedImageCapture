@@ -282,7 +282,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.isAnimatingFill = false;
       this.capturePhoto();
       pathEl.classList.remove('animate-fill');
-    }, 2000);
+    }, 5000);
   }
 
   private runDetectionLoop() {
