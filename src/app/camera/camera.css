@@ -6,6 +6,32 @@
   overflow: hidden;
   position: relative;
 }
+
+.camera-permission-slider {
+  position: fixed;
+  left: 50%;
+  transform: translate(-50%, 0);
+  bottom: -200px; /* oculto */
+  background: #fff;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  transition: bottom 0.3s ease-in-out;
+  z-index: 1000;
+  width: 50%;
+}
+
+.camera-permission-slider.visible {
+  bottom: 0; /* deslizado arriba */
+}
+
+.slider-content p {
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
 .camera-container {
   position: relative;
   width: 100%;

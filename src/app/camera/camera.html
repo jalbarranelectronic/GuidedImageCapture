@@ -1,4 +1,16 @@
-<button #startBtn id="startBtn" (click)="startCapture()">Start capture</button>
+<!-- Slider modal -->
+<div class="camera-permission-slider" [class.visible]="showPermissionSlider()">
+  <div class="slider-content">
+    <p>We need your permisson to access your camera 📷</p>
+    <button (click)="requestCameraAccess()">Allow access</button>
+  </div>
+</div>
+
+<div *ngIf="cameraReady()">
+  <button #startBtn id="startBtn" (click)="startCapture()">
+    Start capture
+  </button>
+</div>
 
 <canvas
   #freezeCanvas

@@ -40,7 +40,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   proportion = signal<number | null>(null);
   capturedImage = signal<string | null>(null);
   isFrozen = signal(false);
+  cameraReady = signal(true);
 
+  showPermissionSlider = signal(true);
   showDetections = signal(false);
   showBoxes = signal(false);
 
@@ -151,11 +153,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   // Start handling the UI 'Start' button click (this is called from template)
   async startCapture() {
+    if (!this.stream) return;
+
     const startBtn = this.startBtnRef?.nativeElement;
     if (startBtn) startBtn.style.display = 'none';
 
     await this.requestFullscreenAndOrientation();
-    await this.initCameraAndCanvases();
+    await this.initVideoAndCanvases();
     await this.loadModel();
     this.initReferenceShapes();
     this.runDetectionLoop();
@@ -173,20 +177,22 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async initCameraAndCanvases() {
+  async requestCameraAccess() {
     try {
-      this.feedback.set('Requesting camera access...');
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: 'environment' },
+        video: { facingMode: { ideal: 'environment' } },
       });
       this.feedback.set('Camera ready.');
+      // ocultamos slider y marcamos cámara lista
+      this.showPermissionSlider.set(false);
+      this.cameraReady.set(true);
     } catch (err) {
-      console.error(err);
       this.feedback.set("❌ Couldn't access the camera.");
-      return;
     }
+  }
 
+  private async initVideoAndCanvases() {
     if (!this.stream) {
       this.feedback.set('❌ No camera stream.');
       return;
