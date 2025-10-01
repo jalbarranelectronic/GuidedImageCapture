@@ -12,7 +12,8 @@
   height: 100%;
   overflow: hidden;
 }
-#video {
+#video,
+#freezeCanvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -39,19 +40,23 @@
   height: 100%;
   width: 100%;
   max-height: calc(100% - 71px);
-  z-index: 99999; /* siempre encima */
+  z-index: 2; /* siempre encima */
 }
 
 .header {
   height: 15px;
   width: 100%;
   background-color: rgba(39, 39, 39, 0.5);
-  z-index: 99999;
+  z-index: 2;
 }
 
 .marco-svg {
   width: 100%;
   height: 100%;
+}
+
+#capturedImage {
+  z-index: 3; /* siempre encima */
 }
 
 #overlayCanvas {
@@ -76,7 +81,7 @@
   background: limegreen;
   color: white;
   cursor: pointer;
-  z-index: 999999; /* siempre encima */
+  z-index: 3; /* siempre encima */
 }
 
 #feedback {
@@ -90,7 +95,7 @@
   padding: 12px 20px; /* espacio interno */
   font-size: 18px;
   font-weight: 500;
-  z-index: 9999; /* siempre encima */
+  z-index: 3; /* siempre encima */
 }
 #detections {
   position: absolute;
@@ -142,7 +147,7 @@
   border-radius: 50%;
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
   background: rgba(0, 0, 0, 0.6);
-  z-index: 2000;
+  z-index: 4;
 }
 
 /* Mensaje oculto por defecto */
@@ -239,7 +244,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 1000;
+  z-index: 4;
 }
 
 .toggle-item {
@@ -303,7 +308,7 @@ input:checked + .slider:before {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 5;
 }
 
 .photo-preview img {
@@ -400,7 +405,7 @@ button.confirm {
   top: 50%;
   left: 10px;
   transform: translateY(-50%); /* centrado vertical */
-  z-index: 2000;
+  z-index: 4;
 }
 
 /* Car outline animation */
@@ -445,11 +450,16 @@ button.confirm {
   stroke-dasharray: var(--path-length);
   stroke-dashoffset: var(--path-length);
   animation: dashGlow 1s linear forwards;
-  filter: drop-shadow(0 0 6px #0ff) drop-shadow(0 0 12px #0f0);
+  filter: drop-shadow(0 0 6px #0ff)
+    drop-shadow(0 0 12px rgba(31, 238, 200, 0.69));
 }
 
 @keyframes dashGlow {
   to {
     stroke-dashoffset: 0;
   }
+}
+
+.animate-fill {
+  fill: url(#fillGradient);
 }

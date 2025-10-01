@@ -1,14 +1,27 @@
 <button #startBtn id="startBtn" (click)="startCapture()">Start capture</button>
 
-<video #video id="video" autoplay playsinline muted></video>
-<canvas #canvas id="canvas" style="display: none"></canvas>
+<canvas
+  #freezeCanvas
+  id="freezeCanvas"
+  [style.display]="isFrozen() ? 'block' : 'none'"
+></canvas>
+<video
+  #video
+  id="video"
+  autoplay
+  playsinline
+  muted
+  [style.display]="isFrozen() ? 'none' : 'block'"
+></video>
+
+<canvas #detectionCanvas id="detectionCanvas" style="display: none"></canvas>
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
-<div *ngIf="capturedImage() as photo" class="photo-preview">
+<div id="capturedImage" *ngIf="capturedImage() as photo" class="photo-preview">
   <img [src]="photo" alt="Captured photo" />
 
   <div class="photo-actions">
-    <button class="retry" (click)="capturedImage.set(null)">↻ Retry</button>
+    <button class="retry" (click)="retryPhoto()">↻ Retry</button>
     <button class="confirm" (click)="usePhoto()">✔ Use photo</button>
   </div>
 </div>
@@ -101,12 +114,38 @@
   <div class="marco-container">
     <svg class="marco-svg" [class.glow]="isAnimating">
       <defs>
-        <!-- Gradiente animado -->
+        <!-- Gradiente animado para el contorno -->
         <linearGradient id="glowGradient" gradientTransform="rotate(90)">
           <stop offset="0%" stop-color="#0ff" />
           <stop offset="50%" stop-color="#0f0" />
           <stop offset="100%" stop-color="#0ff" />
         </linearGradient>
+        <!-- Gradiente animado para el relleno -->
+        <linearGradient id="fillGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stop-color="rgba(31, 238, 200, 0.69)">
+            <animate
+              attributeName="stop-color"
+              values="rgba(31, 238, 200, 0.69);rgba(194, 255, 231, 0.30);rgba(58, 241, 144, 0.26);rgba(194, 255, 231, 0.30);rgba(31, 238, 200, 0.69)"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+          </stop>
+          <stop offset="100%" stop-color="rgba(31, 238, 200, 0.69)">
+            <animate
+              attributeName="stop-color"
+              values="rgba(31, 238, 200, 0.69);rgba(194, 255, 231, 0.30);rgba(58, 241, 144, 0.26);rgba(194, 255, 231, 0.30);rgba(31, 238, 200, 0.69)"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="offset"
+              values="0;.20;.40;.60;.80;.95;.80;.60;.40;.20;0;"
+              dur="2s"
+              repeatCount="indefinite"
+            />
+          </stop>
+        </linearGradient>
+
         <mask id="corner-mask">
           <polygon fill="#ffffff" points="0 0, 0 25, 25 0"></polygon>
           <polygon fill="#ffffff" points="572 0, 597 0, 597 25"></polygon>
@@ -143,6 +182,7 @@
             #irregularPath
             [attr.d]="outlinePathData"
             class="irregular-path"
+            [class.animate-fill]="isAnimatingFill"
           />
         </symbol>
       </defs>

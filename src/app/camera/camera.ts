@@ -26,23 +26,26 @@ import { RectMetrics } from './rect-metrics';
 })
 export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
-  @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('detectionCanvas')
+  detectionCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
   @ViewChild('irregularPath') irregularPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('rectPath') rectPathRef!: ElementRef<SVGPathElement>;
+  @ViewChild('freezeCanvas') freezeCanvasRef!: ElementRef<HTMLCanvasElement>;
 
   // Signals
   feedback = signal("Press 'Start capture' button");
   detections = signal<string[]>([]);
   proportion = signal<number | null>(null);
   capturedImage = signal<string | null>(null);
+  isFrozen = signal(false);
 
   showDetections = signal(false);
   showBoxes = signal(false);
 
   nearThreshold = signal(0.98); // demasiado cerca
-  farThreshold = signal(0.9); // demasiado lejos
+  farThreshold = signal(0.85); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -52,6 +55,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   // Animate flag
   isAnimating = false;
+  isAnimatingFill = false;
 
   // Paths and scales
   // private marcoPath2D!: Path2D;
@@ -189,7 +193,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }
 
     const video = this.videoRef.nativeElement;
-    const canvas = this.canvasRef.nativeElement;
+    const canvas = this.detectionCanvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
 
     video.srcObject = this.stream;
@@ -258,14 +262,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     svgEl?.classList.add('glow');
 
     setTimeout(() => {
-      this.capturePhoto(); // tu lógica de captura
       this.isAnimating = false;
+      this.startFillAnimation();
       svgEl?.classList.remove('glow');
     }, 1000);
   }
 
+  private startFillAnimation() {
+    if (this.isAnimatingFill) return;
+    this.isAnimatingFill = true;
+
+    const pathEl = this.irregularPathRef.nativeElement;
+    pathEl.setAttribute('fill', 'url(#fillGradient)');
+
+    pathEl.classList.add('animate-fill');
+
+    // Simualte waiting time for response of AI Quality Checks
+    setTimeout(() => {
+      this.isAnimatingFill = false;
+      this.capturePhoto();
+      pathEl.classList.remove('animate-fill');
+    }, 2000);
+  }
+
   private runDetectionLoop() {
-    const canvas = this.canvasRef.nativeElement;
+    const canvas = this.detectionCanvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
     const video = this.videoRef.nativeElement;
 
@@ -338,7 +359,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
-
+          this.freezeFrame();
           if (!this.isAnimating) {
             this.animateFrameGlow();
           }
@@ -350,8 +371,24 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }, 1000);
   }
 
-  capturePhoto() {
+  freezeFrame() {
     const video = this.videoRef.nativeElement;
+    const canvas = this.freezeCanvasRef.nativeElement; // canvas oculto en el template
+    const ctx = canvas.getContext('2d')!;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    this.isFrozen.set(true); // Signal para ocultar video y mostrar canvas
+  }
+
+  unfreezeFrame() {
+    this.isFrozen.set(false);
+  }
+
+  capturePhoto() {
+    const frozenCanvas = this.freezeCanvasRef.nativeElement;
     // We will cut the image to this rectangle
     const { offsetX, offsetY, scaledWidth, scaledHeight } = this.rectMetrics;
 
@@ -366,7 +403,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const ctx = photoCanvas.getContext('2d');
     ctx?.drawImage(
-      video,
+      frozenCanvas,
       offsetX,
       offsetY,
       scaledWidth,
@@ -379,8 +416,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
   }
 
+  retryPhoto() {
+    this.capturedImage.set(null);
+    this.unfreezeFrame();
+  }
+
   usePhoto() {
     alert('Foto confirmada ✅');
+    this.unfreezeFrame();
     // Aquí podrías emitir un evento al padre o guardar la foto en backend
   }
 }
