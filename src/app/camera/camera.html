@@ -120,6 +120,7 @@
           <stop offset="50%" stop-color="#0f0" />
           <stop offset="100%" stop-color="#0ff" />
         </linearGradient>
+
         <!-- Gradiente animado para el relleno -->
         <linearGradient id="fillGradient" x1="0%" y1="50%" x2="100%" y2="50%">
           <stop offset="0%" stop-color="rgba(31, 238, 200, 0.69)">
@@ -146,12 +147,6 @@
           </stop>
         </linearGradient>
 
-        <mask id="corner-mask">
-          <polygon fill="#ffffff" points="0 0, 0 25, 25 0"></polygon>
-          <polygon fill="#ffffff" points="572 0, 597 0, 597 25"></polygon>
-          <polygon fill="#ffffff" points="597 289, 572 289, 597 264"></polygon>
-          <polygon fill="#ffffff" points="0 289, 0 264, 25 289"></polygon>
-        </mask>
         <mask id="hole-mask">
           <symbol
             id="reference-frame-mask"
@@ -167,16 +162,61 @@
             style="transform-origin: center; transform-box: fill-box"
           />
         </mask>
+
         <symbol
           id="reference-frame"
           [attr.viewBox]="0 + ' ' + 0 + ' ' + svgWidth + ' ' + svgHeight"
           preserveAspectRatio="xMidYMid meet"
         >
-          <path
-            #rectPath
-            id="rectPath"
-            [attr.d]="rectPathData"
-            class="rect-path"
+          <symbol id="top-left-corner" viewBox="0 0 17 16">
+            <path
+              d="M0.000137329 -1.45545e-06L0.00013593 16L2.00014 16L2.00014 2L16.6486 2L16.6486 0L0.000137329 -1.45545e-06Z"
+              fill="white"
+            />
+          </symbol>
+          <symbol id="top-right-corner" viewBox="0 0 17 16">
+            <path
+              d="M16.6485 -1.45545e-06L16.6485 16L14.6485 16L14.6485 2L6.121e-05 2L6.10352e-05 0L16.6485 -1.45545e-06Z"
+              fill="white"
+            />
+          </symbol>
+          <symbol id="bottom-left-corner" viewBox="0 0 17 16">
+            <path
+              d="M1.52588e-05 16.0001L1.386e-05 0.000123526L2.00001 0.000123351L2.00002 14.0001L16.6485 14.0001L16.6485 16.0001L1.52588e-05 16.0001Z"
+              fill="white"
+            />
+          </symbol>
+          <symbol id="bottom-right-corner" viewBox="0 0 17 16">
+            <path
+              d="M16.6486 16L16.6486 1.45545e-06L14.6486 1.28061e-06L14.6486 14L0.00018328 14L0.000183105 16L16.6486 16Z"
+              fill="white"
+            />
+          </symbol>
+          <use
+            href="#top-left-corner"
+            width="16px"
+            height="16px"
+            transform="translate(0 0)"
+          />
+          <use
+            href="#top-right-corner"
+            width="16px"
+            height="16px"
+            [attr.transform]="'translate(' + (svgWidth - 16) + ' 0)'"
+          />
+          <use
+            href="#bottom-left-corner"
+            width="16px"
+            height="16px"
+            [attr.transform]="'translate(0 ' + (svgHeight - 16) + ')'"
+          />
+          <use
+            href="#bottom-right-corner"
+            width="16px"
+            height="16px"
+            [attr.transform]="
+              'translate(' + (svgWidth - 16) + ' ' + (svgHeight - 16) + ')'
+            "
           />
           <path
             #irregularPath

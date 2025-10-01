@@ -75,8 +75,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   private frontLeftOutlinePathData = new Path2D(FRONTLEFT_PATH);
   private rectPath = new Path2D(RECT_PATH);
 
-  svgWidth = 597;
-  svgHeight = 289;
+  svgWidth = 534;
+  svgHeight = 260;
 
   ngAfterViewInit() {
     // Configurar dasharray dinámicamente según la longitud del path

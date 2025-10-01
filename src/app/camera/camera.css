@@ -427,7 +427,7 @@ button.confirm {
 
 .irregular-path {
   fill: transparent;
-  stroke-width: 2;
+  stroke-width: 3;
   stroke: white;
   stroke-linejoin: round;
   stroke-linecap: round;
