@@ -110,6 +110,10 @@
   z-index: 3; /* siempre encima */
 }
 
+#allowBtn {
+  height: 32px;
+}
+
 #feedback {
   display: flex;
   flex-direction: column;
@@ -145,7 +149,6 @@
   padding: 0px;
   background: rgba(0, 0, 0, 0.6);
   color: #0ff;
-  font-family: monospace;
   font-size: 14px;
   border-radius: 8px;
 }
@@ -278,7 +281,6 @@
   align-items: center;
   gap: 8px;
   color: white;
-  font-family: sans-serif;
 }
 
 /* Switch básico estilo iOS */
@@ -397,7 +399,6 @@ button.confirm {
   width: 100%;
   color: #0ff;
   font-size: 14px;
-  font-family: monospace;
 }
 
 .slider-group input[type="range"] {
