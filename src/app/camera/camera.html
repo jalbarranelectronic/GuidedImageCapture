@@ -12,6 +12,18 @@
   </button>
 </div>
 
+<!-- Guías de encuadre -->
+<div class="frame-guide">
+  <div class="arrow arrow-left" *ngIf="showArrow('left')">⬅️</div>
+  <div class="arrow arrow-right" *ngIf="showArrow('right')">➡️</div>
+  <div class="arrow arrow-up" *ngIf="showArrow('up')">⬆️</div>
+  <div class="arrow arrow-down" *ngIf="showArrow('down')">⬇️</div>
+
+  <div class="centered-msg" *ngIf="showCentered()">
+    📸 Centrado correctamente
+  </div>
+</div>
+
 <canvas
   #freezeCanvas
   id="freezeCanvas"

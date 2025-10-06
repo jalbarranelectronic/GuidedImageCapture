@@ -41,6 +41,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   isFrozen = signal(false);
   cameraReady = signal(true);
 
+  arrowDirection = signal<{
+    left: boolean;
+    right: boolean;
+    up: boolean;
+    down: boolean;
+  }>({
+    left: false,
+    right: false,
+    up: false,
+    down: false,
+  });
+  isCentered = signal(false);
+
   showPermissionSlider = signal(true);
   showDetections = signal(false);
   showBoxes = signal(false);
@@ -87,6 +100,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     if (this.stream) {
       this.stream.getTracks().forEach((t) => t.stop());
     }
+  }
+
+  showArrow(dir: 'left' | 'right' | 'up' | 'down') {
+    return this.arrowDirection()[dir];
+  }
+
+  showCentered() {
+    return this.isCentered();
   }
 
   toggleDetections() {
@@ -293,6 +314,61 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }, 5000);
   }
 
+  private drawBoundingBoxes(predictions: cocoSsd.DetectedObject[]) {
+    predictions.forEach((p) => {
+      const [x, y, w, h] = p.bbox;
+      this.overlayCtx.strokeStyle = 'red';
+      this.overlayCtx.lineWidth = 2;
+      this.overlayCtx.strokeRect(x, y, w, h);
+
+      this.overlayCtx.fillStyle = 'red';
+      this.overlayCtx.font = '16px monospace';
+      const labelY = y > 20 ? y - 6 : y + 16;
+      this.overlayCtx.fillText(
+        `${p.class} ${(p.score * 100).toFixed(1)}%`,
+        x,
+        labelY
+      );
+    });
+  }
+
+  private disableFramingGuides() {
+    const arrows = { left: false, right: false, up: false, down: false };
+    this.arrowDirection.set(arrows);
+  }
+
+  private enableFramingGuides(car: cocoSsd.DetectedObject) {
+    const [x, y, w, h] = car.bbox;
+
+    const carCenter = { x: x + w / 2, y: y + h / 2 };
+    const { offsetX, offsetY, width, height } = this.rectMetrics;
+    const rectCenter = { x: offsetX + width / 2, y: offsetY + height / 2 };
+
+    const dx = carCenter.x - rectCenter.x;
+    const dy = carCenter.y - rectCenter.y;
+
+    const toleranceX = width * 0.05;
+    const toleranceY = height * 0.05;
+
+    const arrows = { left: false, right: false, up: false, down: false };
+    let centered = true;
+
+    if (Math.abs(dx) > toleranceX) {
+      centered = false;
+      if (dx > 0)
+        arrows.left = true; // auto a la derecha → mover cámara a la izquierda
+      else arrows.right = true;
+    }
+    if (Math.abs(dy) > toleranceY) {
+      centered = false;
+      if (dy > 0) arrows.up = true; // auto abajo → subir cámara
+      else arrows.down = true;
+    }
+
+    this.arrowDirection.set(arrows);
+    this.isCentered.set(centered);
+  }
+
   private runDetectionLoop() {
     const canvas = this.detectionCanvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
@@ -321,21 +397,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       // draw detections
 
       if (this.showBoxes()) {
-        predictions.forEach((p) => {
-          const [x, y, w, h] = p.bbox;
-          this.overlayCtx.strokeStyle = 'red';
-          this.overlayCtx.lineWidth = 2;
-          this.overlayCtx.strokeRect(x, y, w, h);
-
-          this.overlayCtx.fillStyle = 'red';
-          this.overlayCtx.font = '16px monospace';
-          const labelY = y > 20 ? y - 6 : y + 16;
-          this.overlayCtx.fillText(
-            `${p.class} ${(p.score * 100).toFixed(1)}%`,
-            x,
-            labelY
-          );
-        });
+        this.drawBoundingBoxes(predictions);
       }
 
       // check car-like classes
@@ -361,10 +423,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         const proportion = carWidth / rectWidth;
         this.proportion.set(+proportion.toFixed(3));
         console.log(proportion);
-        if (!dentro || proportion > this.nearThreshold()) {
-          this.feedback.set('Adjust the framing or step back a little. 🚗⬅️');
+
+        if (!dentro) {
+          this.enableFramingGuides(car);
+        } else if (proportion > this.nearThreshold()) {
+          this.feedback.set('Step back a little. 🚗➡️');
         } else if (proportion < this.farThreshold()) {
-          this.feedback.set("You're too far 🚗➡️");
+          this.feedback.set("You're too far 🚗⬅️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
           this.isCapturingPhoto = true;
@@ -375,6 +440,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         }
       } else {
         this.feedback.set('I cannot detect the car, adjust the framing.');
+        this.disableFramingGuides();
         this.proportion.set(null);
       }
     }, 1000);
