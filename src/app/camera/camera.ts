@@ -13,7 +13,6 @@ import '@tensorflow/tfjs-backend-cpu';
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
-import { RECT_PATH } from '../shapes/rect-shape';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 import { RectMetrics } from './rect-metrics';
 
@@ -56,6 +55,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   private stream: MediaStream | null = null;
 
   // Animate flag
+  isCapturingPhoto = false;
   isAnimating = false;
   isAnimatingFill = false;
 
@@ -63,19 +63,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // private marcoPath2D!: Path2D;
   private rectPath2D!: Path2D;
   private rectMetrics: RectMetrics = {
-    scaleX: 0,
-    scaleY: 0,
     offsetX: 0,
     offsetY: 0,
-    scaledWidth: 0,
-    scaledHeight: 0,
+    width: 0,
+    height: 0,
   };
 
   // Car outline data
   outlinePathData = FRONTLEFT_PATH;
-  rectPathData = RECT_PATH;
-  private frontLeftOutlinePathData = new Path2D(FRONTLEFT_PATH);
-  private rectPath = new Path2D(RECT_PATH);
 
   svgWidth = 534;
   svgHeight = 260;
@@ -85,8 +80,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const pathEl = this.irregularPathRef.nativeElement;
     const length = pathEl.getTotalLength();
     pathEl.style.setProperty('--path-length', `${length}`);
-    /*pathEl.style.strokeDasharray = `${length}`;
-    pathEl.style.strokeDashoffset = `${length}`;*/
   }
 
   ngOnDestroy() {
@@ -233,14 +226,23 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const w = overlayCanvas.width;
     const h = overlayCanvas.height;
 
-    const rectResult = this.createScaledPath(this.rectPath, w, h);
-    this.rectPath2D = rectResult.path;
-    this.rectMetrics.offsetX = rectResult.offsetX;
-    this.rectMetrics.offsetY = rectResult.offsetY;
-    this.rectMetrics.scaleX = rectResult.scaleX;
-    this.rectMetrics.scaleY = rectResult.scaleY;
-    this.rectMetrics.scaledWidth = rectResult.scaledWidth;
-    this.rectMetrics.scaledHeight = rectResult.scaledHeight;
+    const marginX = w * 0.05;
+    const marginY = h * 0.05;
+
+    const availableWidth = w - 2 * marginX;
+    const availableHeight = h - 2 * marginY;
+
+    // center within the available area
+    const offsetX = marginX;
+    const offsetY = 0;
+
+    // const rectResult = this.createScaledPath(this.rectPath, w, h);
+    this.rectPath2D = new Path2D();
+    this.rectPath2D.rect(offsetX, offsetY, availableWidth, availableHeight);
+    this.rectMetrics.offsetX = offsetX;
+    this.rectMetrics.offsetY = offsetY;
+    this.rectMetrics.width = availableWidth;
+    this.rectMetrics.height = availableHeight;
 
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
@@ -340,7 +342,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       const car = predictions.find((p) =>
         ['car', 'truck', 'bus'].includes(p.class)
       );
-      if (car) {
+      if (car && !this.isCapturingPhoto) {
         const [x, y, w, h] = car.bbox;
 
         // test if bbox corners inside rectPath
@@ -355,7 +357,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         );
 
         const carWidth = w;
-        const rectWidth = this.svgWidth * this.rectMetrics.scaleX;
+        const rectWidth = this.rectMetrics.width;
         const proportion = carWidth / rectWidth;
         this.proportion.set(+proportion.toFixed(3));
         console.log(proportion);
@@ -365,6 +367,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           this.feedback.set("You're too far 🚗➡️");
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
+          this.isCapturingPhoto = true;
           this.freezeFrame();
           if (!this.isAnimating) {
             this.animateFrameGlow();
@@ -396,30 +399,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   capturePhoto() {
     const frozenCanvas = this.freezeCanvasRef.nativeElement;
     // We will cut the image to this rectangle
-    const { offsetX, offsetY, scaledWidth, scaledHeight } = this.rectMetrics;
+    const { offsetX, offsetY, width, height } = this.rectMetrics;
 
-    // We cut 5% from the bottom and 5% from the top
-    const marginY = scaledHeight * 0.5;
-    const newHeight = scaledHeight - 2 * marginY;
+    // We cut 10% from the bottom and 10% from the top
+    const marginY = height * 0.1;
+    const newHeight = height - 2 * marginY;
     const newOffsetY = offsetY + marginY;
 
     const photoCanvas = document.createElement('canvas');
-    photoCanvas.width = scaledWidth;
-    photoCanvas.height = scaledHeight;
+    photoCanvas.width = width;
+    photoCanvas.height = newHeight;
 
     const ctx = photoCanvas.getContext('2d');
     ctx?.drawImage(
       frozenCanvas,
       offsetX,
-      offsetY,
-      scaledWidth,
-      scaledHeight,
+      newOffsetY,
+      width,
+      newHeight,
       0,
       0,
-      scaledWidth,
-      scaledHeight
+      width,
+      newHeight
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
+    this.isCapturingPhoto = false;
   }
 
   retryPhoto() {
