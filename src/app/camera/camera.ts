@@ -59,7 +59,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   showBoxes = signal(false);
 
   nearThreshold = signal(0.98); // demasiado cerca
-  farThreshold = signal(0.85); // demasiado lejos
+  farThreshold = signal(0.88); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
   private overlayCtx!: CanvasRenderingContext2D;
@@ -311,7 +311,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.isAnimatingFill = false;
       this.capturePhoto();
       pathEl.classList.remove('animate-fill');
-    }, 5000);
+    }, 3000);
   }
 
   private drawBoundingBoxes(predictions: cocoSsd.DetectedObject[]) {
@@ -356,13 +356,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     if (Math.abs(dx) > toleranceX) {
       centered = false;
       if (dx > 0)
-        arrows.left = true; // auto a la derecha → mover cámara a la izquierda
-      else arrows.right = true;
+        arrows.right = true; // auto a la derecha → mover cámara a la derecha
+      else arrows.left = true;
     }
     if (Math.abs(dy) > toleranceY) {
       centered = false;
-      if (dy > 0) arrows.up = true; // auto abajo → subir cámara
-      else arrows.down = true;
+      if (dy > 0) arrows.down = true; // auto abajo → bajar cámara
+      else arrows.up = true;
     }
 
     this.arrowDirection.set(arrows);

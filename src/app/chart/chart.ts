@@ -19,7 +19,7 @@ export class ChartComponent implements AfterViewInit {
   // receive a signal value via input()
   newValue = input<number | null>(null);
   nearThreshold = input<number>(0.98);
-  farThreshold = input<number>(0.85);
+  farThreshold = input<number>(0.88);
 
   private ctx!: CanvasRenderingContext2D;
   private history: number[] = [];
