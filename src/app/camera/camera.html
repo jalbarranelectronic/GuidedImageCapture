@@ -12,55 +12,32 @@
   </button>
 </div>
 
+<!-- Texto de guía central -->
+<div class="direction-text" *ngIf="showDirectionMessage()">
+  {{ directionMessage() }}
+</div>
+
 <!-- Guías de encuadre -->
 <div class="frame-guide">
   <div class="arrow arrow-left" *ngIf="showArrow('left')">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <g>
-        <polygon
-          points="13.707 4.707 12.293 3.293 3.586 12 12.293 20.707 13.707 19.293 6.414 12 13.707 4.707"
-        />
-        <polygon
-          points="19.707 4.707 18.293 3.293 9.586 12 18.293 20.707 19.707 19.293 12.414 12 19.707 4.707"
-        />
-      </g>
-    </svg>
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
   <div class="arrow arrow-right" *ngIf="showArrow('right')">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <g>
-        <polygon
-          points="11.707 3.293 10.293 4.707 17.586 12 10.293 19.293 11.707 20.707 20.414 12 11.707 3.293"
-        />
-        <polygon
-          points="5.707 3.293 4.293 4.707 11.586 12 4.293 19.293 5.707 20.707 14.414 12 5.707 3.293"
-        />
-      </g>
-    </svg>
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
   <div class="arrow arrow-up" *ngIf="showArrow('up')">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <g>
-        <polygon
-          points="12 6.414 19.293 13.707 20.707 12.293 12 3.586 3.293 12.293 4.707 13.707 12 6.414"
-        />
-        <polygon
-          points="3.293 18.293 4.707 19.707 12 12.414 19.293 19.707 20.707 18.293 12 9.586 3.293 18.293"
-        />
-      </g>
-    </svg>
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
   <div class="arrow arrow-down" *ngIf="showArrow('down')">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <g>
-        <polygon
-          points="12 17.586 4.707 10.293 3.293 11.707 12 20.414 20.707 11.707 19.293 10.293 12 17.586"
-        />
-        <polygon
-          points="20.707 5.707 19.293 4.293 12 11.586 4.707 4.293 3.293 5.707 12 14.414 20.707 5.707"
-        />
-      </g>
-    </svg>
+    <span></span>
+    <span></span>
+    <span></span>
   </div>
 
   <div class="centered-msg" *ngIf="showCentered()">

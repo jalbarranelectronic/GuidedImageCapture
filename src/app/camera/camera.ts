@@ -40,6 +40,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   capturedImage = signal<string | null>(null);
   isFrozen = signal(false);
   cameraReady = signal(true);
+  directionMessage = signal<string | null>(null);
+  showDirectionMessage = signal(false);
 
   arrowDirection = signal<{
     left: boolean;
@@ -352,21 +354,46 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const arrows = { left: false, right: false, up: false, down: false };
     let centered = true;
+    let showMessage = false;
+    let message: string | null = null;
+    // Clear message
+    this.showDirectionMessage.set(showMessage);
 
     if (Math.abs(dx) > toleranceX) {
       centered = false;
-      if (dx > 0)
-        arrows.right = true; // auto a la derecha → mover cámara a la derecha
-      else arrows.left = true;
+      showMessage = true;
+      if (dx > 0) {
+        arrows.right = true;
+        message = 'Move camera to the right';
+      } else {
+        arrows.left = true;
+        message = 'Move camera to the left';
+      }
     }
     if (Math.abs(dy) > toleranceY) {
       centered = false;
-      if (dy > 0) arrows.down = true; // auto abajo → bajar cámara
-      else arrows.up = true;
+      showMessage = true;
+      if (dy > 0) {
+        arrows.down = true;
+        if (arrows.right || arrows.left) {
+          message += ' and downward';
+        } else {
+          message = 'Move the camera downward';
+        }
+      } else {
+        arrows.up = true;
+        if (arrows.right || arrows.left) {
+          message = ' and upward';
+        } else {
+          message = 'Move the camera upward';
+        }
+      }
     }
 
     this.arrowDirection.set(arrows);
     this.isCentered.set(centered);
+    this.directionMessage.set(message);
+    this.showDirectionMessage.set(showMessage);
   }
 
   private runDetectionLoop() {

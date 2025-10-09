@@ -506,61 +506,85 @@ button.confirm {
 
 .arrow {
   position: absolute;
-  font-size: 3rem;
-  color: white;
-  filter: drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
-  animation: pulse 1s infinite alternate;
   z-index: 10;
   width: 48px;
   height: 48px;
 }
 
-.arrow g {
-  fill: white;
-  stroke: white;
+.arrow span {
+  display: block;
+  width: 1.5vw;
+  height: 1.5vw;
+  border-bottom: 5px solid white;
+  border-right: 5px solid white;
+  transform: rotate(45deg);
+  margin: -10px;
+  animation: animate 2s infinite;
+}
+
+.arrow span:nth-child(2) {
+  animation-delay: -0.2s;
+}
+
+.arrow span:nth-child(3) {
+  animation-delay: -0.4s;
+}
+
+@keyframes animate {
+  0% {
+    opacity: 0;
+    transform: rotate(45deg) translate(-20px, -20px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(45deg) translate(20px, 20px);
+  }
 }
 
 .arrow-left {
   left: 10px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: rotate(90deg);
 }
 .arrow-right {
   right: 10px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: rotate(270deg);
 }
 .arrow-up {
   top: 10px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: rotate(90deg);
 }
 .arrow-down {
   bottom: 10px;
   left: 50%;
-  transform: translateX(-50%);
 }
 
-.centered-msg {
+.direction-text {
   position: absolute;
-  bottom: 60px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.2rem;
-  color: #00ffae;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 8px 20px;
-  border-radius: 12px;
-  backdrop-filter: blur(4px);
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  color: #eafff9;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(0, 255, 180, 0.7);
+  font-weight: 500;
+  line-height: 1.4;
+  pointer-events: none;
+  animation: fadeInOut 1.2s ease-in-out infinite alternate;
+  z-index: 10;
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.3;
-    transform: scale(1);
+@keyframes fadeInOut {
+  from {
+    opacity: 0.4;
   }
-  100% {
+  to {
     opacity: 1;
-    transform: scale(1.2);
   }
 }
