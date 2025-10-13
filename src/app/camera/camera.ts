@@ -15,6 +15,7 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 import { RectMetrics } from './rect-metrics';
+import { TfModel } from './tf-model';
 
 @Component({
   selector: 'app-camera',
@@ -89,6 +90,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   svgWidth = 534;
   svgHeight = 260;
+
+  constructor(private tfModelService: TfModel) {}
 
   ngAfterViewInit() {
     // Configurar dasharray dinámicamente según la longitud del path
@@ -176,9 +179,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     await this.requestFullscreenAndOrientation();
     await this.initVideoAndCanvases();
-    await this.loadModel();
     this.initReferenceShapes();
-    this.runDetectionLoop();
+    await this.runDetectionLoop();
   }
 
   // request fullscreen & lock landscape (best-effort)
@@ -236,12 +238,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // initial canvas draw
     this.overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-  }
-
-  private async loadModel() {
-    this.feedback.set('Loading model...');
-    this.model = await cocoSsd.load();
-    this.feedback.set('ODM completely loaded. Press Start to search car...');
   }
 
   private initReferenceShapes() {
@@ -396,10 +392,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.showDirectionMessage.set(showMessage);
   }
 
-  private runDetectionLoop() {
+  private async runDetectionLoop() {
     const canvas = this.detectionCanvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
     const video = this.videoRef.nativeElement;
+
+    this.model = await this.tfModelService.getModelReady();
+    this.feedback.set('Model ready. Start recognizing objects');
 
     this.detectionTimer = setInterval(async () => {
       // draw current frame to hidden canvas
