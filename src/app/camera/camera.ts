@@ -394,6 +394,38 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.feedback.set(message);
   }
 
+  private getMainCar(
+    detections: cocoSsd.DetectedObject[]
+  ): cocoSsd.DetectedObject | null {
+    if (detections.length === 1) {
+      return detections[0];
+    }
+
+    // We analyze their sizes
+    const vehicleAreas = detections.map((v) => ({
+      ...v,
+      area: v.bbox[2] * v.bbox[3], // width * height
+    }));
+
+    // Order from bigger to smaller area
+    vehicleAreas.sort((a, b) => b.area - a.area);
+
+    const largest = vehicleAreas[0];
+    const second = vehicleAreas[1];
+
+    // Verify percentual difference
+    const sizeDifference = (largest.area - second.area) / largest.area;
+
+    if (sizeDifference < 0.1) {
+      // Less than 10% of areas sizes difference
+      this.feedback.set('Please frame only one vehicle in the image.');
+      return null;
+    }
+
+    // If there's enough difference
+    return largest;
+  }
+
   private async runDetectionLoop() {
     const canvas = this.detectionCanvasRef.nativeElement;
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
@@ -429,14 +461,31 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       }
 
       // check car-like classes
-      const car = predictions.find((p) =>
+      const vehicles = predictions.filter((p) =>
         ['car', 'truck', 'bus'].includes(p.class)
       );
+
+      // We will store the main care here
+      let car: cocoSsd.DetectedObject | null;
+
+      // If no vehicle was detected
+      if (vehicles.length === 0) {
+        this.feedback.set('I cannot detect the car, adjust the framing.');
+        this.disableFramingGuides();
+        this.proportion.set(null);
+        return;
+      }
+
+      if (vehicles.length > 1) {
+        car = this.getMainCar(vehicles);
+      } else {
+        car = vehicles[0];
+      }
+
       if (car && !this.isCapturingPhoto) {
         const [x, y, w, h] = car.bbox;
 
         // test if bbox corners inside rectPath
-
         const dentro = [
           [x, y],
           [x + w, y],
@@ -467,7 +516,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           }
         }
       } else {
-        this.feedback.set('I cannot detect the car, adjust the framing.');
         this.disableFramingGuides();
         this.proportion.set(null);
       }
