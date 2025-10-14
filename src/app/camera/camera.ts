@@ -42,7 +42,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   isFrozen = signal(false);
   cameraReady = signal(true);
   directionMessage = signal<string | null>(null);
-  showDirectionMessage = signal(false);
+  showAnalyzingMessage = signal(false);
 
   arrowDirection = signal<{
     left: boolean;
@@ -304,9 +304,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     pathEl.classList.add('animate-fill');
 
+    this.showAnalyzingMessage.set(true);
+
     // Simualte waiting time for response of AI Quality Checks
     setTimeout(() => {
       this.isAnimatingFill = false;
+      this.showAnalyzingMessage.set(false);
       this.capturePhoto();
       pathEl.classList.remove('animate-fill');
     }, 3000);
@@ -353,7 +356,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     let showMessage = false;
     let message: string = '';
     // Clear message
-    this.showDirectionMessage.set(showMessage);
+    this.showAnalyzingMessage.set(showMessage);
 
     if (Math.abs(dx) > toleranceX) {
       centered = false;
