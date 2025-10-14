@@ -351,7 +351,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const arrows = { left: false, right: false, up: false, down: false };
     let centered = true;
     let showMessage = false;
-    let message: string | null = null;
+    let message: string = '';
     // Clear message
     this.showDirectionMessage.set(showMessage);
 
@@ -388,8 +388,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     this.arrowDirection.set(arrows);
     this.isCentered.set(centered);
-    this.directionMessage.set(message);
-    this.showDirectionMessage.set(showMessage);
+    this.feedback.set(message);
   }
 
   private async runDetectionLoop() {
