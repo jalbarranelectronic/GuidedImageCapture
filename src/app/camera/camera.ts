@@ -16,6 +16,7 @@ import { ChartComponent } from '../chart/chart';
 import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 import { RectMetrics } from './rect-metrics';
 import { TfModel } from './tf-model';
+import { ConfigService } from '../services/config.service';
 
 @Component({
   selector: 'app-camera',
@@ -42,7 +43,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   isFrozen = signal(false);
   cameraReady = signal(true);
   directionMessage = signal<string | null>(null);
-  showAnalyzingMessage = signal(false);
+  showFeedbackMessage = signal(false);
+  showRetryConfirmPhotoMessage = signal(false);
 
   arrowDirection = signal<{
     left: boolean;
@@ -57,11 +59,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   });
   isCentered = signal(false);
 
+  showTogglePanel = signal(true);
   showPermissionSlider = signal(true);
   showDetections = signal(false);
   showBoxes = signal(false);
 
-  nearThreshold = signal(0.98); // demasiado cerca
+  nearThreshold = signal(0.99); // demasiado cerca
   farThreshold = signal(0.88); // demasiado lejos
 
   private ctx!: CanvasRenderingContext2D;
@@ -88,10 +91,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // Car outline data
   outlinePathData = FRONTLEFT_PATH;
 
-  svgWidth = 534;
-  svgHeight = 260;
+  svgWidth = 448;
+  svgHeight = 282;
 
-  constructor(private tfModelService: TfModel) {}
+  constructor(private tfModelService: TfModel, private config: ConfigService) {}
+
+  ngOnInit() {
+    const cfg = this.config.config();
+
+    // Set configurations
+    this.showTogglePanel.set(this.config.getFeature('showDetectionsPanel'));
+
+    console.log('Active component configuration:', cfg);
+  }
 
   ngAfterViewInit() {
     // Configurar dasharray dinámicamente según la longitud del path
@@ -180,7 +192,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     await this.requestFullscreenAndOrientation();
     await this.initVideoAndCanvases();
     this.initReferenceShapes();
-    await this.runDetectionLoop();
+    await this.showGeneralInstructionsMessage();
+
+    if (this.config.getFeature('enableObjectDetection')) {
+      await this.runDetectionLoop();
+    }
+  }
+
+  private async showGeneralInstructionsMessage() {
+    this.feedback.set('Frame the vehicle within the outline.');
+    this.showFeedbackMessage.set(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    this.showFeedbackMessage.set(false);
   }
 
   // request fullscreen & lock landscape (best-effort)
@@ -245,15 +269,15 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const w = overlayCanvas.width;
     const h = overlayCanvas.height;
 
-    const marginX = w * 0.05;
-    const marginY = h * 0.05;
+    const marginX = w * 0.1;
+    const marginY = h - 20;
 
     const availableWidth = w - 2 * marginX;
     const availableHeight = h - 2 * marginY;
 
     // center within the available area
     const offsetX = marginX;
-    const offsetY = 0;
+    const offsetY = marginY;
 
     // const rectResult = this.createScaledPath(this.rectPath, w, h);
     this.rectPath2D = new Path2D();
@@ -285,6 +309,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
+    this.showFeedbackMessage.set(false);
+
     const svgEl = this.irregularPathRef.nativeElement.closest('svg');
     svgEl?.classList.add('glow');
 
@@ -299,20 +325,30 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     if (this.isAnimatingFill) return;
     this.isAnimatingFill = true;
 
+    this.showFeedbackMessage.set(true);
+    this.feedback.set('Analyzing with AI. . .');
+
     const pathEl = this.irregularPathRef.nativeElement;
     pathEl.setAttribute('fill', 'url(#fillGradient)');
 
     pathEl.classList.add('animate-fill');
 
-    this.showAnalyzingMessage.set(true);
-
     // Simualte waiting time for response of AI Quality Checks
     setTimeout(() => {
       this.isAnimatingFill = false;
-      this.showAnalyzingMessage.set(false);
+      this.showFeedbackMessage.set(false);
       this.capturePhoto();
       pathEl.classList.remove('animate-fill');
     }, 3000);
+  }
+
+  private showImageOkMessage() {
+    this.feedback.set('Image OK');
+    this.showFeedbackMessage.set(true);
+
+    setTimeout(() => {
+      this.showFeedbackMessage.set(false);
+    }, 2000);
   }
 
   private drawBoundingBoxes(predictions: cocoSsd.DetectedObject[]) {
@@ -353,14 +389,10 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const arrows = { left: false, right: false, up: false, down: false };
     let centered = true;
-    let showMessage = false;
     let message: string = '';
-    // Clear message
-    this.showAnalyzingMessage.set(showMessage);
 
     if (Math.abs(dx) > toleranceX) {
       centered = false;
-      showMessage = true;
       if (dx > 0) {
         arrows.right = true;
         message = 'Move camera to the right';
@@ -371,7 +403,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }
     if (Math.abs(dy) > toleranceY) {
       centered = false;
-      showMessage = true;
       if (dy > 0) {
         arrows.down = true;
         if (arrows.right || arrows.left) {
@@ -432,7 +463,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const video = this.videoRef.nativeElement;
 
     this.model = await this.tfModelService.getModelReady();
-    this.feedback.set('Model ready. Start recognizing objects');
 
     this.detectionTimer = setInterval(async () => {
       // draw current frame to hidden canvas
@@ -468,6 +498,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       // We will store the main care here
       let car: cocoSsd.DetectedObject | null;
 
+      this.showFeedbackMessage.set(true);
       // If no vehicle was detected
       if (vehicles.length === 0) {
         this.feedback.set('I cannot detect the car, adjust the framing.');
@@ -565,6 +596,13 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       newHeight
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
+
+    if (this.config.getFeature('showPhotoConfirmation')) {
+      this.showRetryConfirmPhotoMessage.set(true);
+    } else {
+      this.unfreezeFrame();
+    }
+
     this.isCapturingPhoto = false;
   }
 

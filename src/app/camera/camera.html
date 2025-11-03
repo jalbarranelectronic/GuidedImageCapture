@@ -12,11 +12,6 @@
   </button>
 </div>
 
-<!-- Texto de guía central -->
-<div class="direction-text" *ngIf="showAnalyzingMessage()">
-  Analizing with AI
-</div>
-
 <!-- Guías de encuadre -->
 <div class="frame-guide">
   <div class="arrow arrow-left" *ngIf="showArrow('left')">
@@ -62,7 +57,11 @@
 <canvas #detectionCanvas id="detectionCanvas" style="display: none"></canvas>
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
-<div id="capturedImage" *ngIf="capturedImage() as photo" class="photo-preview">
+<div
+  id="capturedImage"
+  *ngIf="showRetryConfirmPhotoMessage() as photo"
+  class="photo-preview"
+>
   <img [src]="photo" alt="Captured photo" />
 
   <div class="photo-actions">
@@ -72,6 +71,7 @@
 </div>
 
 <!-- Toggle switch -->
+@if (showTogglePanel()) {
 <div class="toggle-panel">
   <div class="toggle-item">
     <label class="switch">
@@ -93,8 +93,7 @@
     <span class="toggle-label">Show bounding boxes</span>
   </div>
 </div>
-
-@if (showDetections()) {
+} @if (showDetections()) {
 <div class="detections-area">
   <div id="proportionBox">
     Proportion: <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
@@ -155,7 +154,7 @@
 </div>
 
 <div id="main-container">
-  <div class="header"></div>
+  <div id="header"></div>
   <div class="marco-container">
     <svg class="marco-svg" [class.glow]="isAnimating">
       <defs>
@@ -275,11 +274,12 @@
       <use href="#reference-frame" />
     </svg>
   </div>
-
-  <div id="feedback-box">
-    <div id="feedback">{{ feedback() }}</div>
-  </div>
+  <div id="footer"></div>
 </div>
+
+@if (showFeedbackMessage()) {
+<div id="feedback">{{ feedback() }}</div>
+}
 
 <div class="orientation-warning">
   <div class="orientation-content">

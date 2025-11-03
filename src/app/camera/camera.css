@@ -63,14 +63,19 @@
   flex-grow: 1;
   display: flex;
   justify-content: center;
-  height: 100%;
   width: 100%;
-  max-height: calc(100% - 71px);
   z-index: 2; /* siempre encima */
 }
 
-.header {
-  height: 15px;
+#header {
+  height: 20px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+#footer {
+  height: 20px;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 2;
@@ -125,8 +130,10 @@
 }
 
 #feedback {
-  display: flex;
-  flex-direction: column;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: fit-content;
   background: rgba(0, 0, 0, 0.7); /* fondo semitransparente */
   color: #fff;

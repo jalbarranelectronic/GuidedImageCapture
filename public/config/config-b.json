@@ -1,0 +1,10 @@
+{
+  "variant": "B",
+  "features": {
+    "showFramingArrows": true,
+    "enableObjectDetection": true,
+    "showPhotoConfirmation": true,
+    "showDetectionsPanel": false,
+    "enableAiAnalysisSimulation": true
+  }
+}
