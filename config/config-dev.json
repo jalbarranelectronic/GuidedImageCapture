@@ -1,0 +1,10 @@
+{
+  "variant": "DEV",
+  "features": {
+    "showFramingArrows": true,
+    "enableObjectDetection": true,
+    "showPhotoConfirmation": true,
+    "showDetectionsPanel": true,
+    "enableAiAnalysisSimulation": true
+  }
+}
