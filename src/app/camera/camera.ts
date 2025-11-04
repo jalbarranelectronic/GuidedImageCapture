@@ -44,7 +44,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   cameraReady = signal(true);
   directionMessage = signal<string | null>(null);
   showFeedbackMessage = signal(false);
-  showRetryConfirmPhotoMessage = signal(false);
+  showCapturedPhotoSignal = signal(false);
+  showRetryConfirmMessageSignal = signal(false);
+  showToastOk = signal(false);
 
   arrowDirection = signal<{
     left: boolean;
@@ -270,7 +272,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const h = overlayCanvas.height;
 
     const marginX = w * 0.1;
-    const marginY = h - 20;
+    const marginY = 20;
 
     const availableWidth = w - 2 * marginX;
     const availableHeight = h - 2 * marginY;
@@ -303,52 +305,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     }
     this.overlayCtx.lineWidth = 0;
     this.overlayCtx.stroke(this.rectPath2D);
-  }
-
-  private animateFrameGlow() {
-    if (this.isAnimating) return;
-    this.isAnimating = true;
-
-    this.showFeedbackMessage.set(false);
-
-    const svgEl = this.irregularPathRef.nativeElement.closest('svg');
-    svgEl?.classList.add('glow');
-
-    setTimeout(() => {
-      this.isAnimating = false;
-      this.startFillAnimation();
-      svgEl?.classList.remove('glow');
-    }, 1000);
-  }
-
-  private startFillAnimation() {
-    if (this.isAnimatingFill) return;
-    this.isAnimatingFill = true;
-
-    this.showFeedbackMessage.set(true);
-    this.feedback.set('Analyzing with AI. . .');
-
-    const pathEl = this.irregularPathRef.nativeElement;
-    pathEl.setAttribute('fill', 'url(#fillGradient)');
-
-    pathEl.classList.add('animate-fill');
-
-    // Simualte waiting time for response of AI Quality Checks
-    setTimeout(() => {
-      this.isAnimatingFill = false;
-      this.showFeedbackMessage.set(false);
-      this.capturePhoto();
-      pathEl.classList.remove('animate-fill');
-    }, 3000);
-  }
-
-  private showImageOkMessage() {
-    this.feedback.set('Image OK');
-    this.showFeedbackMessage.set(true);
-
-    setTimeout(() => {
-      this.showFeedbackMessage.set(false);
-    }, 2000);
   }
 
   private drawBoundingBoxes(predictions: cocoSsd.DetectedObject[]) {
@@ -465,6 +421,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.model = await this.tfModelService.getModelReady();
 
     this.detectionTimer = setInterval(async () => {
+      // If it is not in the process of capturing the photo
+      if (this.isCapturingPhoto) {
+        return;
+      }
+
       // draw current frame to hidden canvas
       this.ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -513,7 +474,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         car = vehicles[0];
       }
 
-      if (car && !this.isCapturingPhoto) {
+      if (car) {
         const [x, y, w, h] = car.bbox;
 
         // test if bbox corners inside rectPath
@@ -541,9 +502,10 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         } else {
           this.feedback.set("Perfect! Don't move, capturing... 📸");
           this.isCapturingPhoto = true;
+          // Freeze the video frame to capture it
           this.freezeFrame();
           if (!this.isAnimating) {
-            this.animateFrameGlow();
+            await this.orchestratePhotoCapturingAsync();
           }
         }
       } else {
@@ -554,14 +516,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   freezeFrame() {
-    const video = this.videoRef.nativeElement;
-    const canvas = this.freezeCanvasRef.nativeElement; // canvas oculto en el template
-    const ctx = canvas.getContext('2d')!;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
     this.isFrozen.set(true); // Signal para ocultar video y mostrar canvas
   }
 
@@ -569,8 +523,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.isFrozen.set(false);
   }
 
-  capturePhoto() {
-    const frozenCanvas = this.freezeCanvasRef.nativeElement;
+  async capturePhotoAsync() {
+    const frozenCanvas = this.detectionCanvasRef.nativeElement;
     // We will cut the image to this rectangle
     const { offsetX, offsetY, width, height } = this.rectMetrics;
 
@@ -597,23 +551,89 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
 
-    if (this.config.getFeature('showPhotoConfirmation')) {
-      this.showRetryConfirmPhotoMessage.set(true);
-    } else {
-      this.unfreezeFrame();
-    }
+    await this.showCapturedPhoto();
+  }
 
-    this.isCapturingPhoto = false;
+  async showCapturedPhoto() {
+    this.showCapturedPhotoSignal.set(true);
+
+    if (this.config.getFeature('showPhotoConfirmation')) {
+      this.showRetryConfirmMessageSignal.set(true);
+    } else {
+      await this.usePhoto();
+    }
   }
 
   retryPhoto() {
     this.capturedImage.set(null);
+    this.showCapturedPhotoSignal.set(false);
     this.unfreezeFrame();
   }
 
-  usePhoto() {
-    alert('Foto confirmada ✅');
+  async usePhoto() {
+    await this.showImageOkMessageAsync();
+    this.showCapturedPhotoSignal.set(false);
     this.unfreezeFrame();
     // Aquí podrías emitir un evento al padre o guardar la foto en backend
+  }
+
+  private async animateFrameGlowAsync() {
+    if (this.isAnimating) return;
+    this.isAnimating = true;
+
+    this.showFeedbackMessage.set(false);
+
+    const svgEl = this.irregularPathRef.nativeElement.closest('svg');
+    svgEl?.classList.add('glow');
+
+    // Wait 1 second to let the animation to complete
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    this.isAnimating = false;
+    svgEl?.classList.remove('glow');
+  }
+
+  private async startFillAnimationAsync() {
+    if (this.isAnimatingFill) return;
+    this.isAnimatingFill = true;
+
+    this.showFeedbackMessage.set(true);
+    this.feedback.set('Analyzing with AI. . .');
+
+    const pathEl = this.irregularPathRef.nativeElement;
+    pathEl.setAttribute('fill', 'url(#fillGradient)');
+
+    pathEl.classList.add('animate-fill');
+
+    // Wait 3 seconds to simulate the AI Analyzing
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    this.isAnimatingFill = false;
+    this.showFeedbackMessage.set(false);
+    pathEl.classList.remove('animate-fill');
+  }
+
+  private async showImageOkMessageAsync() {
+    this.showRetryConfirmMessageSignal.set(false);
+    this.showToastOk.set(true);
+
+    // Wait 2 seconds showing the message
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    this.showToastOk.set(false);
+  }
+
+  private async orchestratePhotoCapturingAsync() {
+    // Start animate glow
+    await this.animateFrameGlowAsync();
+
+    // Simulate AI Analyzing
+    await this.startFillAnimationAsync();
+
+    // Capture video frame
+    await this.capturePhotoAsync();
+
+    // Mark the end of the capturing process
+    this.isCapturingPhoto = false;
   }
 }

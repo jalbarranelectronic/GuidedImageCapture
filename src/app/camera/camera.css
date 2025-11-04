@@ -39,7 +39,7 @@
   overflow: hidden;
 }
 #video,
-#freezeCanvas {
+#detectionCanvas {
   position: absolute;
   top: 0;
   left: 0;
@@ -356,7 +356,7 @@ input:checked + .slider:before {
   z-index: 5;
 }
 
-.photo-preview img {
+.photo-preview > img {
   max-width: 90%;
   max-height: 60%;
   border-radius: 12px;
@@ -574,7 +574,7 @@ button.confirm {
 .arrow-up {
   top: 10px;
   left: 50%;
-  transform: rotate(90deg);
+  transform: rotate(180deg);
 }
 .arrow-down {
   bottom: 10px;
@@ -604,4 +604,33 @@ button.confirm {
   to {
     opacity: 1;
   }
+}
+
+/* Toast OK */
+#toast-ok {
+  width: 340px;
+  height: 56px;
+  position: relative;
+  border-radius: 8px;
+  background-color: rgba(130, 211, 196, 0.4);
+  border: 1px solid #12856a;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  text-align: left;
+  font-size: 16px;
+  color: #fff;
+  margin-top: 16px;
+}
+.iconsolidcheck-circle {
+  height: 26px;
+  width: 26px;
+  position: relative;
+  margin-bottom: 0px;
+}
+.toast-ok-text {
+  position: relative;
+  line-height: 30px;
 }

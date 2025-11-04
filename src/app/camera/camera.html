@@ -41,8 +41,8 @@
 </div>
 
 <canvas
-  #freezeCanvas
-  id="freezeCanvas"
+  #detectionCanvas
+  id="detectionCanvas"
   [style.display]="isFrozen() ? 'block' : 'none'"
 ></canvas>
 <video
@@ -54,21 +54,29 @@
   [style.display]="isFrozen() ? 'none' : 'block'"
 ></video>
 
-<canvas #detectionCanvas id="detectionCanvas" style="display: none"></canvas>
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
-<div
-  id="capturedImage"
-  *ngIf="showRetryConfirmPhotoMessage() as photo"
-  class="photo-preview"
->
-  <img [src]="photo" alt="Captured photo" />
+@if (showCapturedPhotoSignal()) {
+<div id="capturedImage" class="photo-preview">
+  <img [src]="capturedImage()" alt="Captured photo" />
 
+  @if (showToastOk()) {
+  <div id="toast-ok">
+    <img
+      class="iconsolidcheck-circle"
+      alt=""
+      src="assets/icons/check-circle.svg"
+    />
+    <b class="toast-ok-text">Image saved.</b>
+  </div>
+  } @if (showRetryConfirmMessageSignal()){
   <div class="photo-actions">
     <button class="retry" (click)="retryPhoto()">↻ Retry</button>
     <button class="confirm" (click)="usePhoto()">✔ Use photo</button>
   </div>
+  }
 </div>
+}
 
 <!-- Toggle switch -->
 @if (showTogglePanel()) {
