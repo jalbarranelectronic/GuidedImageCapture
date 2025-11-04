@@ -521,6 +521,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   unfreezeFrame() {
     this.isFrozen.set(false);
+
+    // Mark the end of the capturing process
+    this.isCapturingPhoto = false;
   }
 
   async capturePhotoAsync() {
@@ -624,6 +627,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   private async orchestratePhotoCapturingAsync() {
+    // Hide the framing arrows
+    this.disableFramingGuides();
+
     // Start animate glow
     await this.animateFrameGlowAsync();
 
@@ -632,8 +638,5 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // Capture video frame
     await this.capturePhotoAsync();
-
-    // Mark the end of the capturing process
-    this.isCapturingPhoto = false;
   }
 }
