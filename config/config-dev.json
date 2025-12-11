@@ -1,5 +1,6 @@
 {
   "variant": "DEV",
+  "lang": "en",
   "features": {
     "showFramingArrows": true,
     "enableObjectDetection": true,
