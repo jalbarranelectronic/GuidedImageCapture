@@ -1,0 +1,39 @@
+{
+  "requestAccess": "We need your permisson to access your camera 📷",
+  "allowAccess": "Allow access",
+  "startCapture": "Start capture",
+  "imageSaved": "Image saved.",
+  "retry": "↻ Retry",
+  "usePhoto": "✔ Use photo",
+  "showDetections": "Show detections and proportions",
+  "showBoxes": "Show bounding boxes",
+  "proportion": "Proportion:",
+  "nearThreshold": "Near threshold",
+  "farThreshold": "Far threshold",
+  "orientationMesage": "Please turn your device to landscape orientation to continue.",
+  "pressStart": "Press 'Start capture' button",
+  "analizingAI": "Analyzing with AI . . .",
+  "camera": {
+    "ready": "Camera ready.",
+    "notAllowed": "❌ Couldn't access the camera.",
+    "noStream": "❌ No camera stream."
+  },
+  "framing": {
+    "generalIsntructions": "Frame the vehicle withing the outline",
+    "oneVehicle": "Please frame only one vehicle in the image.",
+    "noCar": "I cannot detect the car, adjust the framing.",
+    "tooNear": "Step back a little. 🚗➡️",
+    "tooFar": "You're too far, como closer 🚗⬅️",
+    "perfect": "Perfect! Don't move, capturing... 📸",
+    "guideance": {
+      "left": "Move camera to the left",
+      "right": "Move camera to the right",
+      "down": "Move the camera downward",
+      "up": "Move the camera upward",
+      "leftDown": "Move camera to the left and downward",
+      "rightDown": "Move camera to the right and downward",
+      "leftUp": "Move camera to the left and upward",
+      "rightUp": "Move camera to the right and upward"
+    }
+  }
+}

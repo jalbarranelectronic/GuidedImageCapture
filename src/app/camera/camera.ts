@@ -17,11 +17,13 @@ import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
 import { RectMetrics } from './rect-metrics';
 import { TfModel } from './tf-model';
 import { ConfigService } from '../services/config.service';
+import { TranslocoPipe } from '@ngneat/transloco';
+import { TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-camera',
   standalone: true,
-  imports: [CommonModule, ChartComponent],
+  imports: [CommonModule, ChartComponent, TranslocoPipe],
   templateUrl: './camera.html',
   styleUrl: './camera.css',
 })
@@ -34,6 +36,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('irregularPath') irregularPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('rectPath') rectPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('freezeCanvas') freezeCanvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('captureFrame') captureFrameRef!: ElementRef<SVGUseElement>;
 
   // Signals
   feedback = signal("Press 'Start capture' button");
@@ -96,7 +99,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   svgWidth = 448;
   svgHeight = 282;
 
-  constructor(private tfModelService: TfModel, private config: ConfigService) {}
+  constructor(
+    private tfModelService: TfModel,
+    private config: ConfigService,
+    private transloco: TranslocoService
+  ) {}
 
   ngOnInit() {
     const cfg = this.config.config();
@@ -145,45 +152,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.farThreshold.set(Number(value));
   }
 
-  // helper: create scaled Path2D and scales with margin (centered)
-  private createScaledPath(
-    rawPath: Path2D,
-    canvasWidth: number,
-    canvasHeight: number
-  ) {
-    const marginX = canvasWidth * 0.05;
-    const marginY = canvasHeight * 0.08;
-
-    const availableWidth = canvasWidth - 2 * marginX;
-    const availableHeight = canvasHeight - 2 * marginY;
-
-    const scaleX = availableWidth / this.svgWidth;
-    const scaleY = availableHeight / this.svgHeight;
-
-    const scaledWidth = this.svgWidth * scaleX;
-    const scaledHeight = this.svgHeight * scaleY;
-
-    // center within the available area
-    const offsetX = marginX + (availableWidth - scaledWidth) / 2;
-    const offsetY = 15;
-
-    const transformed = new Path2D();
-    transformed.addPath(
-      rawPath,
-      new DOMMatrix().translate(offsetX, offsetY).scale(scaleX, scaleY)
-    );
-
-    return {
-      path: transformed,
-      scaleX,
-      scaleY,
-      offsetX,
-      offsetY,
-      scaledWidth,
-      scaledHeight,
-    };
-  }
-
   // Start handling the UI 'Start' button click (this is called from template)
   async startCapture() {
     if (!this.stream) return;
@@ -202,7 +170,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   private async showGeneralInstructionsMessage() {
-    this.feedback.set('Frame the vehicle within the outline.');
+    this.feedback.set(this.transloco.translate('framing.generalIsntructions'));
     this.showFeedbackMessage.set(true);
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -227,18 +195,18 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         audio: false,
         video: { facingMode: { ideal: 'environment' } },
       });
-      this.feedback.set('Camera ready.');
+      this.feedback.set(this.transloco.translate('camera.ready'));
       // ocultamos slider y marcamos cámara lista
       this.showPermissionSlider.set(false);
       this.cameraReady.set(true);
     } catch (err) {
-      this.feedback.set("❌ Couldn't access the camera.");
+      this.feedback.set(this.transloco.translate('camera.notAllowed'));
     }
   }
 
   private async initVideoAndCanvases() {
     if (!this.stream) {
-      this.feedback.set('❌ No camera stream.');
+      this.feedback.set(this.transloco.translate('camera.noStream'));
       return;
     }
 
@@ -271,23 +239,24 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const w = overlayCanvas.width;
     const h = overlayCanvas.height;
 
-    const marginX = w * 0.1;
-    const marginY = 20;
-
-    const availableWidth = w - 2 * marginX;
-    const availableHeight = h - 2 * marginY;
+    const frameSvgUseElement = this.captureFrameRef.nativeElement;
+    const frameBoundingClientRect = frameSvgUseElement.getBoundingClientRect();
+    const frameWidth = frameBoundingClientRect.width;
+    const frameHeight = frameBoundingClientRect.height;
+    const frameOffsetX = frameBoundingClientRect.x;
+    const frameOffsetY = frameBoundingClientRect.y;
 
     // center within the available area
-    const offsetX = marginX;
-    const offsetY = marginY;
+    // const offsetX = w * 0.5 - frameWidth * 0.5;
+    // const offsetY = h * 0.5 - frameHeight * 0.5;
 
     // const rectResult = this.createScaledPath(this.rectPath, w, h);
     this.rectPath2D = new Path2D();
-    this.rectPath2D.rect(offsetX, offsetY, availableWidth, availableHeight);
-    this.rectMetrics.offsetX = offsetX;
-    this.rectMetrics.offsetY = offsetY;
-    this.rectMetrics.width = availableWidth;
-    this.rectMetrics.height = availableHeight;
+    this.rectPath2D.rect(frameOffsetX, frameOffsetY, frameWidth, frameHeight);
+    this.rectMetrics.offsetX = frameOffsetX;
+    this.rectMetrics.offsetY = frameOffsetY;
+    this.rectMetrics.width = frameWidth;
+    this.rectMetrics.height = frameHeight;
 
     // redraw overlay with shapes
     this.overlayCtx.clearRect(0, 0, w, h);
@@ -304,6 +273,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.overlayCtx.strokeStyle = 'rgba(255, 255, 0, 0)';
     }
     this.overlayCtx.lineWidth = 0;
+
     this.overlayCtx.stroke(this.rectPath2D);
   }
 
@@ -345,16 +315,16 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     const arrows = { left: false, right: false, up: false, down: false };
     let centered = true;
-    let message: string = '';
+    let message: string = 'framing.guideance.';
 
     if (Math.abs(dx) > toleranceX) {
       centered = false;
       if (dx > 0) {
         arrows.right = true;
-        message = 'Move camera to the right';
+        message += 'right';
       } else {
         arrows.left = true;
-        message = 'Move camera to the left';
+        message += 'left';
       }
     }
     if (Math.abs(dy) > toleranceY) {
@@ -362,23 +332,23 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       if (dy > 0) {
         arrows.down = true;
         if (arrows.right || arrows.left) {
-          message += ' and downward';
+          message += 'Down';
         } else {
-          message = 'Move the camera downward';
+          message += 'down';
         }
       } else {
         arrows.up = true;
         if (arrows.right || arrows.left) {
-          message = ' and upward';
+          message = 'Up';
         } else {
-          message = 'Move the camera upward';
+          message = 'up';
         }
       }
     }
 
     this.arrowDirection.set(arrows);
     this.isCentered.set(centered);
-    this.feedback.set(message);
+    this.feedback.set(this.transloco.translate(message));
   }
 
   private getMainCar(
@@ -405,7 +375,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     if (sizeDifference < 0.1) {
       // Less than 10% of areas sizes difference
-      this.feedback.set('Please frame only one vehicle in the image.');
+      this.feedback.set(this.transloco.translate('framing.oneVehicle'));
       return null;
     }
 
@@ -443,7 +413,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       );
 
       // 🔹  Dibujar overlay y marcos de referencia
-      this.drawBackgroundAndRefereceCanvas(overlayCanvas);
+      //this.drawBackgroundAndRefereceCanvas(overlayCanvas);
+      this.initReferenceShapes();
 
       // draw detections
 
@@ -462,7 +433,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.showFeedbackMessage.set(true);
       // If no vehicle was detected
       if (vehicles.length === 0) {
-        this.feedback.set('I cannot detect the car, adjust the framing.');
+        this.feedback.set(this.transloco.translate('framing.noCar'));
         this.disableFramingGuides();
         this.proportion.set(null);
         return;
@@ -496,11 +467,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         if (!dentro) {
           this.enableFramingGuides(car);
         } else if (proportion > this.nearThreshold()) {
-          this.feedback.set('Step back a little. 🚗➡️');
+          this.feedback.set(this.transloco.translate('framing.tooNear'));
         } else if (proportion < this.farThreshold()) {
-          this.feedback.set("You're too far 🚗⬅️");
+          this.feedback.set(this.transloco.translate('framing.tooFar'));
         } else {
-          this.feedback.set("Perfect! Don't move, capturing... 📸");
+          this.feedback.set(this.transloco.translate('framing.perfect'));
           this.isCapturingPhoto = true;
           // Freeze the video frame to capture it
           this.freezeFrame();
@@ -601,7 +572,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.isAnimatingFill = true;
 
     this.showFeedbackMessage.set(true);
-    this.feedback.set('Analyzing with AI. . .');
+    this.feedback.set(this.transloco.translate('analizingAI'));
 
     const pathEl = this.irregularPathRef.nativeElement;
     pathEl.setAttribute('fill', 'url(#fillGradient)');

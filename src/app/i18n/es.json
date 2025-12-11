@@ -1,0 +1,39 @@
+{
+  "requestAccess": "Necesitamos de tu permiso para acceder a tu cámara 📷",
+  "allowAccess": "Permitir acceso",
+  "startCapture": "Iniciar captura",
+  "imageSaved": "Imagen guardada.",
+  "retry": "↻ Reintentar",
+  "usePhoto": "✔ Utilizar foto",
+  "showDetections": "Mostrar detecciones y proporciones",
+  "showBoxes": "Mostrar bounding boxes",
+  "proportion": "Proporción:",
+  "nearThreshold": "Umbral de cercanía",
+  "farThreshold": "Umbral de lejanía",
+  "orientationMesage": "Gire su dispositivo horizontalmente para continuar.",
+  "pressStart": "Presione el botón 'Iniciar captura'",
+  "analizingAI": "Analizando con IA . . .",
+  "camera": {
+    "ready": "Cámara lista.",
+    "notAllowed": "❌ No se pudo acceder a la cámara.",
+    "noStream": "❌ Sin transmisión de cámara."
+  },
+  "framing": {
+    "generalIsntructions": "Enmarca el vehículo dentro del contorno.",
+    "oneVehicle": "Por favor, encuadre solo un vehículo en la imagen.",
+    "noCar": "No puedo encontrar el auto, por favor ajusta el encuadre.",
+    "tooNear": "Retrocede un poco 🚗➡️",
+    "tooFar": "Estás demasiado lejos, acércate 🚗⬅️",
+    "perfect": "¡Perfecto! No te muevas, capturando ... 📸",
+    "guideance": {
+      "left": "Mueve la cámara a la izquierda",
+      "right": "Mueve la cámara a la derecha",
+      "down": "Mueve la cámara hacia abajo",
+      "up": "Mueve la cámara hacia arriba",
+      "leftDown": "Mueve la cámara a la izquierda y hacia abajo",
+      "rightDown": "Mueve la cámara a la derecha y hacia abajo",
+      "leftUp": "Mueve la cámara hacia la izquierda y hacia arriba",
+      "rightUp": "Meuve la cámara hacia la derecha y hacia arriba"
+    }
+  }
+}

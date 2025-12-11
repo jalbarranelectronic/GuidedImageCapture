@@ -1,14 +1,16 @@
 <!-- Slider modal -->
 <div class="camera-permission-slider" [class.visible]="showPermissionSlider()">
   <div class="slider-content">
-    <p>We need your permisson to access your camera 📷</p>
-    <button id="allowBtn" (click)="requestCameraAccess()">Allow access</button>
+    <p>{{ "requestAccess" | transloco }}</p>
+    <button id="allowBtn" (click)="requestCameraAccess()">
+      {{ "allowAccess" | transloco }}
+    </button>
   </div>
 </div>
 
 <div *ngIf="cameraReady()">
   <button #startBtn id="startBtn" (click)="startCapture()">
-    Start capture
+    {{ "startCapture" | transloco }}
   </button>
 </div>
 
@@ -33,10 +35,6 @@
     <span></span>
     <span></span>
     <span></span>
-  </div>
-
-  <div class="centered-msg" *ngIf="showCentered()">
-    📸 Centrado correctamente
   </div>
 </div>
 
@@ -71,8 +69,12 @@
   </div>
   } @if (showRetryConfirmMessageSignal()){
   <div class="photo-actions">
-    <button class="retry" (click)="retryPhoto()">↻ Retry</button>
-    <button class="confirm" (click)="usePhoto()">✔ Use photo</button>
+    <button class="retry" (click)="retryPhoto()">
+      {{ "retry" | transloco }}
+    </button>
+    <button class="confirm" (click)="usePhoto()">
+      {{ "usePhoto" | transloco }}
+    </button>
   </div>
   }
 </div>
@@ -90,7 +92,7 @@
       />
       <span class="slider"></span>
     </label>
-    <span class="toggle-label">Show detections and proportions</span>
+    <span class="toggle-label">{{ "showDetections" | transloco }}</span>
   </div>
 
   <div class="toggle-item">
@@ -98,13 +100,14 @@
       <input type="checkbox" [checked]="showBoxes()" (change)="toggleBoxes()" />
       <span class="slider"></span>
     </label>
-    <span class="toggle-label">Show bounding boxes</span>
+    <span class="toggle-label">{{ "showBoxes" | transloco }}</span>
   </div>
 </div>
 } @if (showDetections()) {
 <div class="detections-area">
   <div id="proportionBox">
-    Proportion: <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
+    {{ "proportion" | transloco }}
+    <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
     <app-chart
       [newValue]="proportion()"
       [nearThreshold]="nearThreshold()"
@@ -115,7 +118,9 @@
   <!-- ✅ Sliders debajo de la gráfica -->
   <div class="slider-group">
     <label>
-      Near threshold ({{ nearThreshold() | number : "1.2-2" }})
+      {{ "nearThreshold" | transloco }} ({{
+        nearThreshold() | number : "1.2-2"
+      }})
       <input
         type="range"
         class="slider-near"
@@ -128,7 +133,7 @@
     </label>
 
     <label>
-      Far threshold ({{ farThreshold() | number : "1.2-2" }})
+      {{ "farThreshold" | transloco }} ({{ farThreshold() | number : "1.2-2" }})
       <input
         type="range"
         class="slider-far"
@@ -279,7 +284,7 @@
         </symbol>
       </defs>
       <rect id="overlay-box" x="0" y="0" />
-      <use href="#reference-frame" />
+      <use #captureFrame href="#reference-frame" />
     </svg>
   </div>
   <div id="footer"></div>
@@ -292,6 +297,6 @@
 <div class="orientation-warning">
   <div class="orientation-content">
     <div class="phone-icon"></div>
-    <p>Please turn your device to landscape orientation to continue.</p>
+    <p>{{ "orientationMesage" | transloco }}</p>
   </div>
 </div>

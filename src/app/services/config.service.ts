@@ -1,7 +1,9 @@
 import { Injectable, signal } from '@angular/core';
+import { LanguageService } from './language.service';
 
 export interface AppConfig {
   variant: string;
+  lang: string;
   features: {
     showFramingArrows: boolean;
     enableObjectDetection: boolean;
@@ -15,12 +17,14 @@ export interface AppConfig {
 export class ConfigService {
   config = signal<AppConfig | null>(null);
 
-  constructor() {}
+  constructor(private languageService: LanguageService) {}
 
-  async loadConfig() {
+  async loadConfig(): Promise<void> {
     try {
       const params = new URLSearchParams(window.location.search);
-      const variant = params.get('variant') ?? 'dev';
+      console.log(window.location);
+      const variant = params.get('variant')?.toLowerCase() ?? 'dev';
+      const lang = this.languageService.detectLangFromUrl();
       const url = `config/config-${variant}.json`;
       const response = await fetch(url);
       const cfg = await response.json();
