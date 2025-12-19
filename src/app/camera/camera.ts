@@ -36,7 +36,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('irregularPath') irregularPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('rectPath') rectPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('freezeCanvas') freezeCanvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('captureFrame') captureFrameRef!: ElementRef<SVGUseElement>;
+  @ViewChild('header') headerDivRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('footer') footerDivRef!: ElementRef<HTMLDivElement>;
 
   // Signals
   feedback = signal("Press 'Start capture' button");
@@ -239,16 +240,20 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const w = overlayCanvas.width;
     const h = overlayCanvas.height;
 
-    const frameSvgUseElement = this.captureFrameRef.nativeElement;
-    const frameBoundingClientRect = frameSvgUseElement.getBoundingClientRect();
-    const frameWidth = frameBoundingClientRect.width;
-    const frameHeight = frameBoundingClientRect.height;
-    const frameOffsetX = frameBoundingClientRect.x;
-    const frameOffsetY = frameBoundingClientRect.y;
+    const headerDivElement = this.headerDivRef.nativeElement;
+    const headerClientRect = headerDivElement.getBoundingClientRect();
+    const footerDivElement = this.footerDivRef.nativeElement;
+    const footerClientRect = footerDivElement.getBoundingClientRect();
 
-    // center within the available area
-    // const offsetX = w * 0.5 - frameWidth * 0.5;
-    // const offsetY = h * 0.5 - frameHeight * 0.5;
+    const frameWidth = w - w * 0.3;
+    const frameHeight = h - headerClientRect.height - footerClientRect.height;
+    const frameOffsetX = w * 0.5 - frameWidth * 0.5;
+    const frameOffsetY = h * 0.5 - frameHeight * 0.5;
+
+    console.log('frameWidth: ' + frameWidth);
+    console.log('frameHeight: ' + frameHeight);
+    console.log('frameOffsetX: ' + frameOffsetX);
+    console.log('frameOffsetY: ' + frameOffsetY);
 
     // const rectResult = this.createScaledPath(this.rectPath, w, h);
     this.rectPath2D = new Path2D();
@@ -339,9 +344,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       } else {
         arrows.up = true;
         if (arrows.right || arrows.left) {
-          message = 'Up';
+          message += 'Up';
         } else {
-          message = 'up';
+          message += 'up';
         }
       }
     }

@@ -167,8 +167,8 @@
 </div>
 
 <div id="main-container">
-  <div id="header"></div>
-  <div class="marco-container">
+  <div #header id="header"></div>
+  <div #marcoContainer class="marco-container">
     <svg class="marco-svg" [class.glow]="isAnimating">
       <defs>
         <!-- Gradiente animado para el contorno -->
@@ -287,7 +287,7 @@
       <use #captureFrame href="#reference-frame" />
     </svg>
   </div>
-  <div id="footer"></div>
+  <div #footer id="footer"></div>
 </div>
 
 @if (showFeedbackMessage()) {
