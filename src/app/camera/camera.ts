@@ -245,7 +245,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const footerDivElement = this.footerDivRef.nativeElement;
     const footerClientRect = footerDivElement.getBoundingClientRect();
 
-    const frameWidth = w - w * 0.3;
+    const frameWidth = w - w * 0.28;
     const frameHeight = h - headerClientRect.height - footerClientRect.height;
     const frameOffsetX = w * 0.5 - frameWidth * 0.5;
     const frameOffsetY = h * 0.5 - frameHeight * 0.5;
