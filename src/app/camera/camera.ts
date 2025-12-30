@@ -353,7 +353,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     this.arrowDirection.set(arrows);
     this.isCentered.set(centered);
-    this.feedback.set(this.transloco.translate(message));
+    if (message != 'framing.guideance.') {
+      this.feedback.set(this.transloco.translate(message));
+    }
   }
 
   private getMainCar(
