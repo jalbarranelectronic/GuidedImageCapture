@@ -55,97 +55,117 @@
 <canvas #overlayCanvas id="overlayCanvas"></canvas>
 
 @if (showCapturedPhotoSignal()) {
-<div id="capturedImage" class="photo-preview">
-  <img [src]="capturedImage()" alt="Captured photo" />
+  <div id="capturedImage" class="photo-preview">
+    <img [src]="capturedImage()" alt="Captured photo" />
 
-  @if (showToastOk()) {
-  <div id="toast-ok">
-    <img
-      class="iconsolidcheck-circle"
-      alt=""
-      src="assets/icons/check-circle.svg"
-    />
-    <b class="toast-ok-text">{{ "imageSaved" | transloco }}</b>
+    @if (showToastOk()) {
+      <div id="toast-ok">
+        <img
+          class="iconsolidcheck-circle"
+          alt=""
+          src="assets/icons/check-circle.svg"
+        />
+        <b class="toast-ok-text">{{ "imageSaved" | transloco }}</b>
+      </div>
+    }
+    @if (showRetryConfirmMessageSignal()) {
+      <div class="photo-actions">
+        <button class="retry" (click)="retryPhoto()">
+          {{ "retry" | transloco }}
+        </button>
+        <button class="confirm" (click)="usePhoto()">
+          {{ "usePhoto" | transloco }}
+        </button>
+      </div>
+    }
   </div>
-  } @if (showRetryConfirmMessageSignal()){
-  <div class="photo-actions">
-    <button class="retry" (click)="retryPhoto()">
-      {{ "retry" | transloco }}
-    </button>
-    <button class="confirm" (click)="usePhoto()">
-      {{ "usePhoto" | transloco }}
-    </button>
-  </div>
-  }
-</div>
 }
 
 <!-- Toggle switch -->
 @if (showTogglePanel()) {
-<div class="toggle-panel">
-  <div class="toggle-item">
-    <label class="switch">
-      <input
-        type="checkbox"
-        [checked]="showDetections()"
-        (change)="toggleDetections()"
-      />
-      <span class="slider"></span>
-    </label>
-    <span class="toggle-label">{{ "showDetections" | transloco }}</span>
-  </div>
+  <div class="toggle-panel">
+    <div class="toggle-item">
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="showDetections()"
+          (change)="toggleDetections()"
+        />
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">{{ "showDetections" | transloco }}</span>
+    </div>
 
-  <div class="toggle-item">
-    <label class="switch">
-      <input type="checkbox" [checked]="showBoxes()" (change)="toggleBoxes()" />
-      <span class="slider"></span>
-    </label>
-    <span class="toggle-label">{{ "showBoxes" | transloco }}</span>
-  </div>
-</div>
-} @if (showDetections()) {
-<div class="detections-area">
-  <div id="proportionBox">
-    {{ "proportion" | transloco }}
-    <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
-    <app-chart
-      [newValue]="proportion()"
-      [nearThreshold]="nearThreshold()"
-      [farThreshold]="farThreshold()"
-    ></app-chart>
-  </div>
+    <div class="toggle-item">
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="showBoxes()"
+          (change)="toggleBoxes()"
+        />
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">{{ "showBoxes" | transloco }}</span>
+    </div>
 
-  <!-- ✅ Sliders debajo de la gráfica -->
-  <div class="slider-group">
-    <label>
-      {{ "nearThreshold" | transloco }} ({{
-        nearThreshold() | number : "1.2-2"
-      }})
-      <input
-        type="range"
-        class="slider-near"
-        min="0.81"
-        max="1"
-        step="0.01"
-        [value]="nearThreshold()"
-        (input)="setNearThreshold($any($event.target).value)"
-      />
-    </label>
-
-    <label>
-      {{ "farThreshold" | transloco }} ({{ farThreshold() | number : "1.2-2" }})
-      <input
-        type="range"
-        class="slider-far"
-        min="0.5"
-        max="0.9"
-        step="0.01"
-        [value]="farThreshold()"
-        (input)="setFarThreshold($any($event.target).value)"
-      />
-    </label>
+    <div class="toggle-item">
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="showBoxes()"
+          (change)="toggleBoxes()"
+        />
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">{{ "showBoxes" | transloco }}</span>
+    </div>
   </div>
-</div>
+}
+@if (showDetections()) {
+  <div class="detections-area">
+    <div id="proportionBox">
+      {{ "proportion" | transloco }}
+      <span>{{ proportion() !== null ? proportion() : "N/A" }}</span>
+      <app-chart
+        [newValue]="proportion()"
+        [nearThreshold]="nearThreshold()"
+        [farThreshold]="farThreshold()"
+      ></app-chart>
+    </div>
+
+    <!-- ✅ Sliders debajo de la gráfica -->
+    <div class="slider-group">
+      <label>
+        {{ "nearThreshold" | transloco }} ({{
+          nearThreshold() | number: "1.2-2"
+        }})
+        <input
+          type="range"
+          class="slider-near"
+          min="0.81"
+          max="1"
+          step="0.01"
+          [value]="nearThreshold()"
+          (input)="setNearThreshold($any($event.target).value)"
+        />
+      </label>
+
+      <label>
+        {{ "farThreshold" | transloco }} ({{
+          farThreshold() | number: "1.2-2"
+        }})
+        <input
+          type="range"
+          class="slider-far"
+          min="0.5"
+          max="0.9"
+          step="0.01"
+          [value]="farThreshold()"
+          (input)="setFarThreshold($any($event.target).value)"
+        />
+      </label>
+    </div>
+  </div>
 }
 
 <div id="closeButton">
@@ -291,7 +311,7 @@
 </div>
 
 @if (showFeedbackMessage()) {
-<div id="feedback">{{ feedback() }}</div>
+  <div id="feedback">{{ feedback() }}</div>
 }
 
 <div class="orientation-warning">

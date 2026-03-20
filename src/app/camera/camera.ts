@@ -19,6 +19,7 @@ import { TfModel } from './tf-model';
 import { ConfigService } from '../services/config.service';
 import { TranslocoPipe } from '@ngneat/transloco';
 import { TranslocoService } from '@ngneat/transloco';
+import { ImageQualityService } from '../services/image-quality.service';
 
 @Component({
   selector: 'app-camera',
@@ -69,6 +70,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   showPermissionSlider = signal(true);
   showDetections = signal(false);
   showBoxes = signal(false);
+  showImageQualityGauges = signal(false);
 
   nearThreshold = signal(0.99); // demasiado cerca
   farThreshold = signal(0.88); // demasiado lejos
@@ -103,7 +105,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   constructor(
     private tfModelService: TfModel,
     private config: ConfigService,
-    private transloco: TranslocoService
+    private transloco: TranslocoService,
+    private imageQualityService: ImageQualityService,
   ) {}
 
   ngOnInit() {
@@ -143,6 +146,10 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   toggleBoxes() {
     this.showBoxes.update((v) => !v);
+  }
+
+  toggleImageQualityGauges() {
+    this.showImageQualityGauges.update((v) => !v);
   }
 
   setNearThreshold(value: number) {
@@ -250,11 +257,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const frameOffsetX = w * 0.5 - frameWidth * 0.5;
     const frameOffsetY = h * 0.5 - frameHeight * 0.5;
 
-    console.log('frameWidth: ' + frameWidth);
-    console.log('frameHeight: ' + frameHeight);
-    console.log('frameOffsetX: ' + frameOffsetX);
-    console.log('frameOffsetY: ' + frameOffsetY);
-
     // const rectResult = this.createScaledPath(this.rectPath, w, h);
     this.rectPath2D = new Path2D();
     this.rectPath2D.rect(frameOffsetX, frameOffsetY, frameWidth, frameHeight);
@@ -295,7 +297,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       this.overlayCtx.fillText(
         `${p.class} ${(p.score * 100).toFixed(1)}%`,
         x,
-        labelY
+        labelY,
       );
     });
   }
@@ -359,7 +361,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   private getMainCar(
-    detections: cocoSsd.DetectedObject[]
+    detections: cocoSsd.DetectedObject[],
   ): cocoSsd.DetectedObject | null {
     if (detections.length === 1) {
       return detections[0];
@@ -406,9 +408,12 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       // draw current frame to hidden canvas
       this.ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      // Evaluate image quality
+      this.evaluateImageQuality(video);
+
       const predictions = await this.model.detect(canvas);
       this.detections.set(
-        predictions.map((p) => `${p.class} (${(p.score * 100).toFixed(1)}%)`)
+        predictions.map((p) => `${p.class} (${(p.score * 100).toFixed(1)}%)`),
       );
 
       // clear overlay and redraw reference shapes
@@ -416,7 +421,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         0,
         0,
         overlayCanvas.width,
-        overlayCanvas.height
+        overlayCanvas.height,
       );
 
       // 🔹  Dibujar overlay y marcos de referencia
@@ -431,7 +436,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
       // check car-like classes
       const vehicles = predictions.filter((p) =>
-        ['car', 'truck', 'bus'].includes(p.class)
+        ['car', 'truck', 'bus'].includes(p.class),
       );
 
       // We will store the main care here
@@ -462,7 +467,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
           [x, y + h],
           [x + w, y + h],
         ].every(([px, py]) =>
-          this.overlayCtx.isPointInPath(this.rectPath2D, px, py)
+          this.overlayCtx.isPointInPath(this.rectPath2D, px, py),
         );
 
         const carWidth = w;
@@ -528,7 +533,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       0,
       0,
       width,
-      newHeight
+      newHeight,
     );
     this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
 
@@ -616,5 +621,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     // Capture video frame
     await this.capturePhotoAsync();
+  }
+
+  private evaluateImageQuality(video: HTMLVideoElement) {
+    this.imageQualityService.analyzeVideoFrame(video);
   }
 }
