@@ -471,8 +471,8 @@ button.confirm {
 
 .irregular-path {
   fill: transparent;
-  stroke-width: 3;
-  stroke: white;
+  stroke-width: 2;
+  stroke: url(#paint0_linear_7531_29781);
   stroke-linejoin: round;
   stroke-linecap: round;
   transition: stroke-width 0.3s ease;

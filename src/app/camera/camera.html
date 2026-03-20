@@ -191,6 +191,19 @@
   <div #marcoContainer class="marco-container">
     <svg class="marco-svg" [class.glow]="isAnimating">
       <defs>
+        <!-- Gradiente del outline  -->
+        <linearGradient
+          id="paint0_linear_7531_29781"
+          x1="225.521"
+          y1="24.4037"
+          x2="225.521"
+          y2="313.591"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stop-color="white" stop-opacity="0" />
+          <stop offset="1" stop-color="white" />
+        </linearGradient>
+
         <!-- Gradiente animado para el contorno -->
         <linearGradient id="glowGradient" gradientTransform="rotate(90)">
           <stop offset="0%" stop-color="#0ff" />
