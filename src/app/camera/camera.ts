@@ -99,8 +99,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   // Car outline data
   outlinePathData = FRONTLEFT_PATH;
 
-  svgWidth = 448;
-  svgHeight = 282;
+  svgWidth = 564;
+  svgHeight = 322;
 
   constructor(
     private tfModelService: TfModel,
