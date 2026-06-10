@@ -13,7 +13,15 @@ import '@tensorflow/tfjs-backend-cpu';
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { ChartComponent } from '../chart/chart';
-import { FRONTLEFT_PATH } from '../shapes/frontleft-shape';
+import {
+  FRONTLEFTMASK_PATH,
+  FRONTLEFTFRONTEND_PATH,
+  FRONTLEFTPLATE_PATH,
+  FRONTLEFTSIDEMIRROR_PATH,
+  FRONTLEFTSIDESKIRT_PATH,
+  FRONTLEFTWHEEL_PATH,
+  FRONTLEFTWINDSHIELD_PATH,
+} from '../overlays/frontleft-paths';
 import { RectMetrics } from './rect-metrics';
 import { TfModel } from './tf-model';
 import { ConfigService } from '../services/config.service';
@@ -34,7 +42,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   detectionCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('overlayCanvas') overlayCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('startBtn') startBtnRef!: ElementRef<HTMLButtonElement>;
-  @ViewChild('irregularPath') irregularPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('rectPath') rectPathRef!: ElementRef<SVGPathElement>;
   @ViewChild('freezeCanvas') freezeCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('header') headerDivRef!: ElementRef<HTMLDivElement>;
@@ -97,10 +104,16 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   };
 
   // Car outline data
-  outlinePathData = FRONTLEFT_PATH;
+  outlineMaskPathData = FRONTLEFTMASK_PATH;
+  outlinePlatePathData = FRONTLEFTPLATE_PATH;
+  outlineSideskirtPathData = FRONTLEFTSIDESKIRT_PATH;
+  outlineFrontEndPathData = FRONTLEFTFRONTEND_PATH;
+  outlineWindshieldPathData = FRONTLEFTWINDSHIELD_PATH;
+  outlineSideMirrorPathData = FRONTLEFTSIDEMIRROR_PATH;
+  outlineWheelPathData = FRONTLEFTWHEEL_PATH;
 
-  svgWidth = 564;
-  svgHeight = 322;
+  svgWidth = 517;
+  svgHeight = 360;
 
   constructor(
     private tfModelService: TfModel,
@@ -120,9 +133,9 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     // Configurar dasharray dinámicamente según la longitud del path
-    const pathEl = this.irregularPathRef.nativeElement;
-    const length = pathEl.getTotalLength();
-    pathEl.style.setProperty('--path-length', `${length}`);
+    // const pathEl = this.irregularPathRef.nativeElement;
+    // const length = pathEl.getTotalLength();
+    // pathEl.style.setProperty('--path-length', `${length}`);
   }
 
   ngOnDestroy() {
@@ -201,7 +214,11 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: { ideal: 'environment' } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 4096 },
+          height: { ideal: 2160 },
+        },
       });
       this.feedback.set(this.transloco.translate('camera.ready'));
       // ocultamos slider y marcamos cámara lista
@@ -223,6 +240,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
 
     video.srcObject = this.stream;
+    const track = this.stream.getVideoTracks()[0];
+    const capabilities = track.getCapabilities();
+
+    console.log('stream settings: ', track.getSettings());
+    console.log('stream capabilities: ', capabilities);
+
+    const maxWidth = capabilities.width?.max ?? 4032;
+    const maxHeight = capabilities.height?.max ?? 3024;
+
+    await track.applyConstraints({
+      width: maxWidth,
+      height: maxHeight
+    });
 
     await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
@@ -558,9 +588,26 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   async usePhoto() {
     await this.showImageOkMessageAsync();
+    this.donwnloadCapturedImage();
     this.showCapturedPhotoSignal.set(false);
     this.unfreezeFrame();
     // Aquí podrías emitir un evento al padre o guardar la foto en backend
+  }
+
+  private donwnloadCapturedImage() {
+    const imageData = this.capturedImage();
+
+    if (!imageData) {
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = imageData;
+    link.download = `PolicyCheck_${Date.now()}.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   private async animateFrameGlowAsync() {
@@ -569,14 +616,14 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
     this.showFeedbackMessage.set(false);
 
-    const svgEl = this.irregularPathRef.nativeElement.closest('svg');
-    svgEl?.classList.add('glow');
+    // const svgEl = this.irregularPathRef.nativeElement.closest('svg');
+    // svgEl?.classList.add('glow');
 
     // Wait 1 second to let the animation to complete
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     this.isAnimating = false;
-    svgEl?.classList.remove('glow');
+    // svgEl?.classList.remove('glow');
   }
 
   private async startFillAnimationAsync() {
@@ -586,17 +633,17 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     this.showFeedbackMessage.set(true);
     this.feedback.set(this.transloco.translate('analizingAI'));
 
-    const pathEl = this.irregularPathRef.nativeElement;
-    pathEl.setAttribute('fill', 'url(#fillGradient)');
+    // const pathEl = this.irregularPathRef.nativeElement;
+    // pathEl.setAttribute('fill', 'url(#fillGradient)');
 
-    pathEl.classList.add('animate-fill');
+    // pathEl.classList.add('animate-fill');
 
     // Wait 3 seconds to simulate the AI Analyzing
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     this.isAnimatingFill = false;
     this.showFeedbackMessage.set(false);
-    pathEl.classList.remove('animate-fill');
+    // pathEl.classList.remove('animate-fill');
   }
 
   private async showImageOkMessageAsync() {
