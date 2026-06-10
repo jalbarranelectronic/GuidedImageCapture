@@ -28,6 +28,7 @@ import { ConfigService } from '../services/config.service';
 import { TranslocoPipe } from '@ngneat/transloco';
 import { TranslocoService } from '@ngneat/transloco';
 import { ImageQualityService } from '../services/image-quality.service';
+import { CameraResolutionService } from '../services/camera-resolution.service';
 
 @Component({
   selector: 'app-camera',
@@ -46,6 +47,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   @ViewChild('freezeCanvas') freezeCanvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('header') headerDivRef!: ElementRef<HTMLDivElement>;
   @ViewChild('footer') footerDivRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('mobileConsole') mobileConsoleRef!: ElementRef<HTMLDivElement>;
 
   // Signals
   feedback = signal("Press 'Start capture' button");
@@ -120,6 +122,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     private config: ConfigService,
     private transloco: TranslocoService,
     private imageQualityService: ImageQualityService,
+    private cameraResolutionService: CameraResolutionService
   ) {}
 
   ngOnInit() {
@@ -212,14 +215,28 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
   async requestCameraAccess() {
     try {
+      //const bestResolution = await this.cameraResolutionService.findMaximumResolution("environment");
+
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          // width: { exact: bestResolution?.width },
+          // height: { exact: bestResolution?.height },
         },
       });
+
+      const track = this.stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities();
+      await track.applyConstraints({
+        width: { exact: capabilities.width?.max },
+        height: { exact: capabilities.height?.max }
+      });
+
+      //alert(`BestResolution: Height: ${bestResolution?.height} Width: ${bestResolution?.width}`);
+
+      alert(`Capabilities: Height: ${capabilities?.height?.max} Width: ${capabilities?.width?.max}`);
+
       this.feedback.set(this.transloco.translate('camera.ready'));
       // ocultamos slider y marcamos cámara lista
       this.showPermissionSlider.set(false);
@@ -240,23 +257,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     const overlayCanvas = this.overlayCanvasRef.nativeElement;
 
     video.srcObject = this.stream;
-    const track = this.stream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities();
-
-    console.log('stream settings: ', track.getSettings());
-    console.log('stream capabilities: ', capabilities);
-
-    const maxWidth = capabilities.width?.max ?? 4032;
-    const maxHeight = capabilities.height?.max ?? 3024;
-
-    await track.applyConstraints({
-      width: maxWidth,
-      height: maxHeight
-    });
 
     await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
         // set canvas sizes to video size (important)
+        alert(`Video: Width: ${video.videoWidth} Height: ${video.videoHeight}`);
+        const track = this.stream!.getVideoTracks()[0];
+        console.log('Capabilities', track.getCapabilities());
+        console.log('Constraints', track.getConstraints());
+        console.log('Settings', track.getSettings());
+
+        console.log('videoWidth', video.videoWidth);
+        console.log('videoHeight', video.videoHeight);
+
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         overlayCanvas.width = video.videoWidth;
