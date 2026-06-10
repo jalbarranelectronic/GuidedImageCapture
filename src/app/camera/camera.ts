@@ -235,7 +235,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
       //alert(`BestResolution: Height: ${bestResolution?.height} Width: ${bestResolution?.width}`);
 
-      alert(`Capabilities: Height: ${capabilities?.height?.max} Width: ${capabilities?.width?.max}`);
+      //alert(`Capabilities: Height: ${capabilities?.height?.max} Width: ${capabilities?.width?.max}`);
 
       this.feedback.set(this.transloco.translate('camera.ready'));
       // ocultamos slider y marcamos cámara lista
@@ -262,14 +262,6 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
       video.onloadedmetadata = () => {
         // set canvas sizes to video size (important)
         alert(`Video: Width: ${video.videoWidth} Height: ${video.videoHeight}`);
-        const track = this.stream!.getVideoTracks()[0];
-        console.log('Capabilities', track.getCapabilities());
-        console.log('Constraints', track.getConstraints());
-        console.log('Settings', track.getSettings());
-
-        console.log('videoWidth', video.videoWidth);
-        console.log('videoHeight', video.videoHeight);
-
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         overlayCanvas.width = video.videoWidth;
