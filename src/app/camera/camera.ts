@@ -216,8 +216,8 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
         audio: false,
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 4096 },
-          height: { ideal: 2160 },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
         },
       });
       this.feedback.set(this.transloco.translate('camera.ready'));
@@ -554,18 +554,19 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     photoCanvas.height = newHeight;
 
     const ctx = photoCanvas.getContext('2d');
+    // We will ignore the newHeight
     ctx?.drawImage(
       frozenCanvas,
       offsetX,
       newOffsetY,
-      width,
-      newHeight,
+      frozenCanvas.width,
+      frozenCanvas.height,
       0,
       0,
-      width,
-      newHeight,
+      frozenCanvas.width,
+      frozenCanvas.height,
     );
-    this.capturedImage.set(photoCanvas.toDataURL('image/png')); // signal con la foto
+    this.capturedImage.set(photoCanvas.toDataURL('image/jpeg')); // signal con la foto
 
     await this.showCapturedPhoto();
   }
