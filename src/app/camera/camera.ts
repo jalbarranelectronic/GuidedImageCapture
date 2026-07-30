@@ -28,7 +28,7 @@ import { ConfigService } from '../services/config.service';
 import { TranslocoPipe } from '@ngneat/transloco';
 import { TranslocoService } from '@ngneat/transloco';
 import { ImageQualityService } from '../services/image-quality.service';
-import { CameraResolutionService } from '../services/camera-resolution.service';
+import { PhotoCaptureService } from '../services/photo-capture.service';
 
 @Component({
   selector: 'app-camera',
@@ -117,12 +117,15 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   svgWidth = 517;
   svgHeight = 360;
 
+  fullHdWidth = 1920;
+  fullHdHeight = 1080;
+
   constructor(
     private tfModelService: TfModel,
     private config: ConfigService,
     private transloco: TranslocoService,
     private imageQualityService: ImageQualityService,
-    private cameraResolutionService: CameraResolutionService
+    private photoCaptureService: PhotoCaptureService
   ) {}
 
   ngOnInit() {
@@ -228,9 +231,22 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
 
       const track = this.stream.getVideoTracks()[0];
       const capabilities = track.getCapabilities();
+
+      /* We have two options:
+       * A: Apply the maximum supported resolution of the camera
+       * B: Aim for the Full HD resolution (1920x1080)
+      */
+
+      /* Option A: Apply the maximum supported resolution */
+      // await track.applyConstraints({
+      //   width: { exact: capabilities.width?.max },
+      //   height: { exact: capabilities.height?.max }
+      // });
+
+      /* Option B: Aim for the Full HD resolution */
       await track.applyConstraints({
-        width: { exact: capabilities.width?.max },
-        height: { exact: capabilities.height?.max }
+        width: { exact: this.fullHdWidth },
+        height: { exact: this.fullHdHeight },
       });
 
       //alert(`BestResolution: Height: ${bestResolution?.height} Width: ${bestResolution?.width}`);
@@ -261,7 +277,7 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
     await new Promise<void>((resolve) => {
       video.onloadedmetadata = () => {
         // set canvas sizes to video size (important)
-        alert(`Video: Width: ${video.videoWidth} Height: ${video.videoHeight}`);
+        //alert(`Video: Width: ${video.videoWidth} Height: ${video.videoHeight}`);
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         overlayCanvas.width = video.videoWidth;
@@ -545,35 +561,45 @@ export class CameraComponent implements AfterViewInit, OnDestroy {
   }
 
   async capturePhotoAsync() {
-    const frozenCanvas = this.detectionCanvasRef.nativeElement;
-    // We will cut the image to this rectangle
-    const { offsetX, offsetY, width, height } = this.rectMetrics;
+    try {
 
-    // We cut 10% from the bottom and 10% from the top
-    const marginY = height * 0.1;
-    const newHeight = height - 2 * marginY;
-    const newOffsetY = offsetY + marginY;
+      const blob =
+        await this.photoCaptureService.captureAsBlob(
+          this.stream!,
+          this.videoRef.nativeElement
+        );
 
-    const photoCanvas = document.createElement('canvas');
-    photoCanvas.width = width;
-    photoCanvas.height = newHeight;
+      this.drawCapturedImageOnCanvas(blob, this.detectionCanvasRef.nativeElement);
 
-    const ctx = photoCanvas.getContext('2d');
-    // We will ignore the newHeight
+      const imageDataUrl = await this.photoCaptureService.blobToDataUrl(blob);
+      this.capturedImage.set(imageDataUrl);
+      this.showCapturedPhoto();
+
+    } catch (error) {
+
+      console.error(
+        'Error capturing photo',
+        error
+      );
+
+    }
+  }
+
+  async drawCapturedImageOnCanvas(blob: Blob, canvas: HTMLCanvasElement ) {
+    const imageBitmap =
+      await createImageBitmap(blob);
+
+    canvas.width = imageBitmap.width;
+    canvas.height = imageBitmap.height;
+
+    const ctx =
+      canvas.getContext('2d');
+
     ctx?.drawImage(
-      frozenCanvas,
-      offsetX,
-      newOffsetY,
-      frozenCanvas.width,
-      frozenCanvas.height,
+      imageBitmap,
       0,
-      0,
-      frozenCanvas.width,
-      frozenCanvas.height,
+      0
     );
-    this.capturedImage.set(photoCanvas.toDataURL('image/jpeg')); // signal con la foto
-
-    await this.showCapturedPhoto();
   }
 
   async showCapturedPhoto() {
